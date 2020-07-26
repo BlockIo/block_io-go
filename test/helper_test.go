@@ -6,7 +6,7 @@ import (
 )
 
 var pin string
-var aesKey = lib.PinToAesKey(pin)
+var aesKey string
 var controlClearText string
 var controlCipherText string
 
