@@ -1,4 +1,0 @@
-language: go
-script:
-  - go get -v ./lib
-  - go test -v ./test
