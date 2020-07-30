@@ -42,11 +42,12 @@ func (blockIo *Client) Instantiate(Config string, Pin string, Version int, Optio
 	blockIo.AesKey = ""
 	var ConfigObj map[string]interface{}
 
+	err := json.Unmarshal([]byte(Config), &ConfigObj)
 	//no err returned, meaning valid json string in Config
-	if json.Unmarshal([]byte(Config), &ConfigObj) == nil {
+	if err == nil {
 		blockIo.ApiKey = ConfigObj["api_key"].(string)
 		if ConfigObj["version"] != nil {
-			blockIo.Version = ConfigObj["version"].(int)
+			blockIo.Version = int(ConfigObj["version"].(float64))
 		} else {
 			blockIo.Version = blockIo.DefaultVersion
 		}
@@ -67,11 +68,9 @@ func (blockIo *Client) Instantiate(Config string, Pin string, Version int, Optio
 		}
 		if ConfigObj["options"] != nil {
 			var Options map[string]interface{}
-			err := json.Unmarshal([]byte(ConfigObj["options"].(string)), &Options)
-
-			if err != nil {
-				fmt.Println("Ignoring invalid options.", err)
-			}
+			stringMap,_ := json.Marshal(ConfigObj["options"])
+			_ = json.Unmarshal([]byte(string(stringMap)),&Options)
+			
 			blockIo.Options = Options
 			blockIo.Options["allowNoPin"] = false
 		}
