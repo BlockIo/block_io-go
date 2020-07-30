@@ -123,7 +123,6 @@ func (blockIo *Client) Instantiate(Config string, Pin string, Version int, Optio
 	}
 
 	blockIo.restClient = resty.New()
-
 }
 
 func (blockIo *Client) get(path string) string {
@@ -173,7 +172,7 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 	}
 	res := blockIo._request(Method, Path, args)
 
-	jsonString, _ := json.Marshal(res["data"])
+	jsonString, _ := json.Marshal(res)
 	var pojo SignatureData
 	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
@@ -208,7 +207,6 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 	pojo.EncryptedPassphrase = EncryptedPassphrase{}
 	pojoMarshalled, _ := json.Marshal(pojo)
 	return blockIo._request(Method,"sign_and_finalize_withdrawal",string(pojoMarshalled))
-
 }
 
 func (blockIo *Client) _sweep(Method string, Path string, args string) map[string]interface{} {
@@ -235,7 +233,7 @@ func (blockIo *Client) _sweep(Method string, Path string, args string) map[strin
 
 	res := blockIo._request(Method, Path, string(argsObjMarshalled))
 
-	jsonString, _ := json.Marshal(res["data"])
+	jsonString, _ := json.Marshal(res)
 	var pojo SignatureData
 	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
@@ -274,20 +272,15 @@ func (blockIo *Client) _request(Method string, Path string, args string) map[str
 	_:
 		json.Unmarshal([]byte(resString), &res)
 	}
-	if res["status"] != "success" || strings.Contains(Path, "sign_and_finalize"){
-		jsonString, _ := json.Marshal(res["data"])
-		res = nil
-		err := json.Unmarshal([]byte(string(jsonString)), &res)
-		if err != nil {
-			fmt.Println("Error unmarshalling response:", err)
-			return nil
-		}
-		return res
+	jsonString, _ := json.Marshal(res["data"])
+	res = nil
+	err := json.Unmarshal([]byte(string(jsonString)), &res)
+	if err != nil {
+		fmt.Println("Error unmarshalling response:", err)
+		return nil
 	}
-
 	return res
 }
-
 
 func (blockIo *Client) constructUrl(path string) string {
 	return blockIo.apiUrl + path + "?api_key=" + blockIo.apiKey
