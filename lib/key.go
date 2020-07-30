@@ -65,6 +65,14 @@ func ExtractKeyFromPassphrase(HexPass string) string {
 	return hex.EncodeToString(UsableHashed)
 }
 
+func ExtractKeyFromPassphraseString(pass string) string {
+	return ""
+}
+
+func ExtractPubKeyFromPassphraseString(pass string) string {
+	return ""
+}
+
 func ExtractPubKeyFromPassphrase(HexPass string) string {
 	Unhexlified, err := hex.DecodeString(HexPass)
 
