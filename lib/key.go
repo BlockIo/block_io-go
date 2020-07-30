@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/piotrnar/gocoin/lib/btc"
+	"golang.org/x/exp/utf8string"
 	"log"
 )
 
@@ -66,11 +67,18 @@ func ExtractKeyFromPassphrase(HexPass string) string {
 }
 
 func ExtractKeyFromPassphraseString(pass string) string {
-	return ""
+	password := []byte(utf8string.NewString(pass).String())
+	hashed := sha256.Sum256(password)
+	UsableHashed := hashed[:]
+	return hex.EncodeToString(UsableHashed)
 }
 
 func ExtractPubKeyFromPassphraseString(pass string) string {
-	return ""
+	password := []byte(utf8string.NewString(pass).String())
+	hashed := sha256.Sum256(password)
+	UsableHashed := hashed[:]
+	result := btc.PublicFromPrivate(UsableHashed, true)
+	return hex.EncodeToString(result)
 }
 
 func ExtractPubKeyFromPassphrase(HexPass string) string {

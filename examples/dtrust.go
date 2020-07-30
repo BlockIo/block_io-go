@@ -25,15 +25,15 @@ func dtrust() BlockIo.Client {
 
 func RunDtrustExample() {
 	blockIo := dtrust()
-	dtrustAddress := nil
+	//dtrustAddress := nil
 	dtrustAddressLabel := "dTrust1_witness_v0"
 
-	privKeys := []string{
-		lib.ExtractKeyFromPassphraseString("verysecretkey1"),
-		lib.ExtractKeyFromPassphraseString("verysecretkey2"),
-		lib.ExtractKeyFromPassphraseString("verysecretkey3"),
-		lib.ExtractKeyFromPassphraseString("verysecretkey4"),
-	}
+	//privKeys := []string{
+	//	lib.ExtractKeyFromPassphraseString("verysecretkey1"),
+	//	lib.ExtractKeyFromPassphraseString("verysecretkey2"),
+	//	lib.ExtractKeyFromPassphraseString("verysecretkey3"),
+	//	lib.ExtractKeyFromPassphraseString("verysecretkey4"),
+	//}
 	pubKeys := []string{
 		lib.ExtractPubKeyFromPassphraseString("verysecretkey1"),
 		lib.ExtractPubKeyFromPassphraseString("verysecretkey2"),
@@ -43,7 +43,7 @@ func RunDtrustExample() {
 
 	signers := strings.Join(pubKeys, ",")
 	res := blockIo.GetNewDtrustAddress("{\"label\": \"" + dtrustAddressLabel + "\", \"public_keys\": \"" + signers + "\", \"required_signatures\": \"3\", \"address_type\": \"witness_v0\"}")
-	fmt.Print(res)
+	fmt.Println(res)
 	if res["reference_id"] == "" {
 
 	}
