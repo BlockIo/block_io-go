@@ -11,118 +11,118 @@ import (
 )
 
 type Client struct {
-	Options        map[string]interface{}
-	ApiUrl         string
-	Pin            string
-	AesKey         string
-	ApiKey         string
-	Version        int
-	DefaultVersion int
-	Server         string
-	DefaultServer  string
-	Port           string
-	DefaultPort    string
-	Host           string
-	RestClient     *resty.Client
+	options        map[string]interface{}
+	apiUrl         string
+	pin            string
+	aesKey         string
+	apiKey         string
+	version        int
+	defaultVersion int
+	server         string
+	defaultServer  string
+	port           string
+	defaultPort    string
+	host           string
+	restClient     *resty.Client
 }
 
 func (blockIo *Client) Instantiate(Config string, Pin string, Version int, Options string) {
-	blockIo.DefaultVersion = 2
-	blockIo.DefaultServer = ""
-	blockIo.DefaultPort = ""
-	blockIo.Host = "block.io"
+	blockIo.defaultVersion = 2
+	blockIo.defaultServer = ""
+	blockIo.defaultPort = ""
+	blockIo.host = "block.io"
 
 	if Options == "" {
 		Options = "{}"
 	}
 
-	_ = json.Unmarshal([]byte(`{"allowNoPin": false}`), &blockIo.Options)
-	blockIo.ApiUrl = ""
-	blockIo.Pin = Pin
-	blockIo.AesKey = ""
+	_ = json.Unmarshal([]byte(`{"allowNoPin": false}`), &blockIo.options)
+	blockIo.apiUrl = ""
+	blockIo.pin = Pin
+	blockIo.aesKey = ""
 	var ConfigObj map[string]interface{}
 
 	err := json.Unmarshal([]byte(Config), &ConfigObj)
 	//no err returned, meaning valid json string in Config
 	if err == nil {
-		blockIo.ApiKey = ConfigObj["api_key"].(string)
+		blockIo.apiKey = ConfigObj["api_key"].(string)
 		if ConfigObj["version"] != nil {
-			blockIo.Version = int(ConfigObj["version"].(float64))
+			blockIo.version = int(ConfigObj["version"].(float64))
 		} else {
-			blockIo.Version = blockIo.DefaultVersion
+			blockIo.version = blockIo.defaultVersion
 		}
 		if ConfigObj["server"] != nil {
-			blockIo.Server = ConfigObj["server"].(string)
+			blockIo.server = ConfigObj["server"].(string)
 		} else {
-			blockIo.Server = blockIo.DefaultServer
+			blockIo.server = blockIo.defaultServer
 		}
 		if ConfigObj["port"] != nil {
-			blockIo.Port = ConfigObj["port"].(string)
+			blockIo.port = ConfigObj["port"].(string)
 		} else {
-			blockIo.Port = blockIo.DefaultPort
+			blockIo.port = blockIo.defaultPort
 		}
 
 		if ConfigObj["pin"] != nil {
-			blockIo.Pin = ConfigObj["pin"].(string)
-			blockIo.AesKey = lib.PinToAesKey(blockIo.Pin)
+			blockIo.pin = ConfigObj["pin"].(string)
+			blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
 		}
 		if ConfigObj["options"] != nil {
 			var Options map[string]interface{}
 			stringMap,_ := json.Marshal(ConfigObj["options"])
 			_ = json.Unmarshal([]byte(string(stringMap)),&Options)
-			
-			blockIo.Options = Options
-			blockIo.Options["allowNoPin"] = false
+
+			blockIo.options = Options
+			blockIo.options["allowNoPin"] = false
 		}
 
 	} else {
 		//else block will be accessed if Config is not a valid json string
-		blockIo.ApiKey = Config
+		blockIo.apiKey = Config
 		if Version == -1 {
-			blockIo.Version = blockIo.DefaultVersion
+			blockIo.version = blockIo.defaultVersion
 		} else {
-			blockIo.Version = Version
+			blockIo.version = Version
 		}
-		blockIo.Server = blockIo.DefaultServer
-		blockIo.Port = blockIo.DefaultPort
+		blockIo.server = blockIo.defaultServer
+		blockIo.port = blockIo.defaultPort
 		if Pin != "" {
-			blockIo.Pin = Pin
-			blockIo.AesKey = lib.PinToAesKey(blockIo.Pin)
+			blockIo.pin = Pin
+			blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
 		}
 	}
 
 	if Options != "" {
-		err := json.Unmarshal([]byte(Options), &blockIo.Options)
+		err := json.Unmarshal([]byte(Options), &blockIo.options)
 		if err != nil {
 			fmt.Println("Ingoring invalid options", err)
 		}
-		blockIo.Options["allowNoPin"] = false
-		if blockIo.Options["api_url"] != nil {
-			blockIo.ApiUrl = blockIo.Options["api_url"].(string)
+		blockIo.options["allowNoPin"] = false
+		if blockIo.options["api_url"] != nil {
+			blockIo.apiUrl = blockIo.options["api_url"].(string)
 		} else {
-			blockIo.ApiUrl = ""
+			blockIo.apiUrl = ""
 		}
 	}
 
 	var ServerString string
-	if blockIo.Server != "" {
-		ServerString = blockIo.Server + "."
+	if blockIo.server != "" {
+		ServerString = blockIo.server + "."
 	} else {
-		ServerString = blockIo.Server
+		ServerString = blockIo.server
 	}
 
 	var PortString string
-	if blockIo.Port != "" {
-		PortString = ":" + blockIo.Port
+	if blockIo.port != "" {
+		PortString = ":" + blockIo.port
 	} else {
-		PortString = blockIo.Port
+		PortString = blockIo.port
 	}
 
-	if blockIo.ApiUrl == "" {
-		blockIo.ApiUrl = "https://" + ServerString + blockIo.Host + PortString + "/api/v" + strconv.Itoa(Version) + "/"
+	if blockIo.apiUrl == "" {
+		blockIo.apiUrl = "https://" + ServerString + blockIo.host + PortString + "/api/v" + strconv.Itoa(Version) + "/"
 	}
 
-	blockIo.RestClient = resty.New()
+	blockIo.restClient = resty.New()
 
 }
 
@@ -166,7 +166,7 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 	if argsObj["pin"] != nil {
 		pin = argsObj["pin"].(string)
 	} else {
-		pin = blockIo.Pin
+		pin = blockIo.pin
 	}
 	argsObj["pin"] = ""
 	if pin != "" {
@@ -185,13 +185,14 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 		return res
 	}
 	if pin == "" {
-		 if blockIo.Options["allowNoPin"] == true {
+		if blockIo.options["allowNoPin"] == true {
 			return res
-		 }
+		}
 	}
 	var encrypted_passphrase string = pojo.EncryptedPassphrase.Passphrase
 	var aesKey string
-	if blockIo.AesKey != "" { aesKey = blockIo.AesKey } else {aesKey = lib.PinToAesKey(pin) }
+	if blockIo.aesKey != "" { aesKey = blockIo.aesKey
+	} else {aesKey = lib.PinToAesKey(pin) }
 	privKey := lib.ExtractKeyFromEncryptedPassphrase(encrypted_passphrase,aesKey)
 	pubKey := lib.ExtractPubKeyFromEncryptedPassphrase(encrypted_passphrase,aesKey)
 	if pubKey != pojo.EncryptedPassphrase.SignerPublicKey {
@@ -212,11 +213,47 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 
 func (blockIo *Client) _sweep(Method string, Path string, args string) map[string]interface{} {
 
-	/**
-	TODO: define sweep here
-	 */
-	return map[string]interface{}{}
+	var argsObj map[string]interface{}
 
+	err := json.Unmarshal([]byte(args), &argsObj)
+
+	if err != nil {
+		fmt.Println("error converting json:", err)
+		return nil
+	}
+
+	if argsObj["to_address"] == nil {
+		fmt.Println("Missing mandatory private_key argument.")
+	}
+
+	privKeyStr := argsObj["private_key"].(string)
+	keyFromWif := lib.FromWIF(privKeyStr)
+	argsObj["public_key"] = lib.PubKeyFromWIF(privKeyStr)
+	argsObj["private_key"] = ""
+
+	argsObjMarshalled,_ := json.Marshal(argsObj)
+
+	res := blockIo._request(Method, Path, string(argsObjMarshalled))
+
+	jsonString, _ := json.Marshal(res["data"])
+	var pojo SignatureData
+	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
+	if err != nil {
+		fmt.Println("Invalid response conversion:", err)
+		return nil
+	}
+	if pojo.ReferenceID == "" {
+		return res
+	}
+
+	for i := 0; i < len(pojo.Inputs); i++ {
+		for j := 0; j < len(pojo.Inputs[i].Signers); j++ {
+			pojo.Inputs[i].Signers[j].SignedData = lib.SignInputs(keyFromWif,pojo.Inputs[i].DataToSign)
+		}
+	}
+	pojo.EncryptedPassphrase = EncryptedPassphrase{}
+	pojoMarshalled, _ := json.Marshal(pojo)
+	return blockIo._request(Method,"sign_and_finalize_sweep",string(pojoMarshalled))
 }
 
 func (blockIo *Client) _request(Method string, Path string, args string) map[string]interface{} {
@@ -253,5 +290,6 @@ func (blockIo *Client) _request(Method string, Path string, args string) map[str
 
 
 func (blockIo *Client) constructUrl(path string) string {
-	return blockIo.ApiUrl + path + "?api_key=" + blockIo.ApiKey
+	return blockIo.apiUrl + path + "?api_key=" + blockIo.apiKey
 }
+
