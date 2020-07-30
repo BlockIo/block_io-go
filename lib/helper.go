@@ -7,10 +7,13 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/piotrnar/gocoin/lib/btc"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/exp/utf8string"
+	"log"
 )
 
 func SignInputs(PrivKey string, DataToSign string) string {
@@ -31,6 +34,35 @@ func SignInputs(PrivKey string, DataToSign string) string {
 		return ""
 	}
 	return hex.EncodeToString(signature.Serialize())
+}
+
+func ExtractKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {
+	Decrypted := Decrypt(EncryptedData,B64Key)
+	Unhexlified, err := hex.DecodeString(Decrypted)
+
+	if err != nil {
+		log.Fatal(errors.New("Unhexlified Error"))
+	}
+
+	Hashed := sha256.Sum256(Unhexlified)
+	UsableHashed := Hashed[:]
+	return hex.EncodeToString(UsableHashed)
+}
+
+func ExtractPubKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {
+	Decrypted := Decrypt(EncryptedData,B64Key)
+	Unhexlified, err := hex.DecodeString(Decrypted)
+
+	if err != nil {
+		log.Fatal(errors.New("Unhexlified Error"))
+	}
+
+	Hashed := sha256.Sum256(Unhexlified)
+	UsableHashed := Hashed[:]
+
+	result := btc.PublicFromPrivate(UsableHashed, true)
+
+	return hex.EncodeToString(result)
 }
 
 func PinToAesKey(pin string) string {
