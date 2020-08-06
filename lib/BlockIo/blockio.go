@@ -2,16 +2,18 @@ package BlockIo
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/go-resty/resty/v2"
 	"strconv"
 	"strings"
 
 	"github.com/BlockIo/block_io-go/lib"
 )
-
+type Options struct {
+	allowNoPin 	string
+	apiUrl  	string
+}
 type Client struct {
-	options        map[string]interface{}
+	options        Options
 	apiUrl         string
 	pin            string
 	aesKey         string
@@ -26,82 +28,32 @@ type Client struct {
 	restClient     *resty.Client
 }
 
-func (blockIo *Client) Instantiate(Config string, Pin string, Version int, Options string) {
+func (blockIo *Client) Instantiate(ApiKey string, Pin string, Version int, Opts Options) {
 	blockIo.defaultVersion = 2
 	blockIo.defaultServer = ""
 	blockIo.defaultPort = ""
 	blockIo.host = "block.io"
 
-	if Options == "" {
-		Options = "{}"
+	if Opts.allowNoPin == "" {
+		Opts.allowNoPin = "false"
 	}
+	blockIo.options = Opts
+	blockIo.apiUrl = blockIo.options.apiUrl
 
-	_ = json.Unmarshal([]byte(`{"allowNoPin": false}`), &blockIo.options)
-	blockIo.apiUrl = ""
 	blockIo.pin = Pin
 	blockIo.aesKey = ""
-	var ConfigObj map[string]interface{}
 
-	err := json.Unmarshal([]byte(Config), &ConfigObj)
-	//no err returned, meaning valid json string in Config
-	if err == nil {
-		blockIo.apiKey = ConfigObj["api_key"].(string)
-		if ConfigObj["version"] != nil {
-			blockIo.version = int(ConfigObj["version"].(float64))
-		} else {
-			blockIo.version = blockIo.defaultVersion
-		}
-		if ConfigObj["server"] != nil {
-			blockIo.server = ConfigObj["server"].(string)
-		} else {
-			blockIo.server = blockIo.defaultServer
-		}
-		if ConfigObj["port"] != nil {
-			blockIo.port = ConfigObj["port"].(string)
-		} else {
-			blockIo.port = blockIo.defaultPort
-		}
-
-		if ConfigObj["pin"] != nil {
-			blockIo.pin = ConfigObj["pin"].(string)
-			blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
-		}
-		if ConfigObj["options"] != nil {
-			var Options map[string]interface{}
-			stringMap,_ := json.Marshal(ConfigObj["options"])
-			_ = json.Unmarshal([]byte(string(stringMap)),&Options)
-
-			blockIo.options = Options
-			blockIo.options["allowNoPin"] = false
-		}
-
+	blockIo.apiKey = ApiKey
+	if Version == -1 {
+		blockIo.version = blockIo.defaultVersion
 	} else {
-		//else block will be accessed if Config is not a valid json string
-		blockIo.apiKey = Config
-		if Version == -1 {
-			blockIo.version = blockIo.defaultVersion
-		} else {
-			blockIo.version = Version
-		}
-		blockIo.server = blockIo.defaultServer
-		blockIo.port = blockIo.defaultPort
-		if Pin != "" {
-			blockIo.pin = Pin
-			blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
-		}
+		blockIo.version = Version
 	}
-
-	if Options != "" {
-		err := json.Unmarshal([]byte(Options), &blockIo.options)
-		if err != nil {
-			fmt.Println("Ingoring invalid options", err)
-		}
-		blockIo.options["allowNoPin"] = false
-		if blockIo.options["api_url"] != nil {
-			blockIo.apiUrl = blockIo.options["api_url"].(string)
-		} else {
-			blockIo.apiUrl = ""
-		}
+	blockIo.server = blockIo.defaultServer
+	blockIo.port = blockIo.defaultPort
+	if Pin != "" {
+		blockIo.pin = Pin
+		blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
 	}
 
 	var ServerString string
@@ -119,9 +71,8 @@ func (blockIo *Client) Instantiate(Config string, Pin string, Version int, Optio
 	}
 
 	if blockIo.apiUrl == "" {
-		blockIo.apiUrl = "https://" + ServerString + blockIo.host + PortString + "/api/v" + strconv.Itoa(Version) + "/"
+		blockIo.apiUrl = "https://" + ServerString + blockIo.host + PortString + "/api/v" + strconv.Itoa(blockIo.version) + "/"
 	}
-
 	blockIo.restClient = resty.New()
 }
 
@@ -157,8 +108,7 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 	err := json.Unmarshal([]byte(args), &argsObj)
 
 	if err != nil {
-		fmt.Println("error converting json:", err)
-		return nil
+		panic(err)
 	}
 
 	var pin string
@@ -176,27 +126,25 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 	var pojo SignatureData
 	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
-		fmt.Println("Invalid response conversion:", err)
-		return nil
+		panic(err)
 	}
 	if (pojo.ReferenceID == "" || pojo.EncryptedPassphrase == EncryptedPassphrase{} ||
 		pojo.EncryptedPassphrase.Passphrase == "") {
 		return res
 	}
 	if pin == "" {
-		if blockIo.options["allowNoPin"] == true {
+		if blockIo.options.allowNoPin == "true" {
 			return res
 		}
 	}
-	var encrypted_passphrase string = pojo.EncryptedPassphrase.Passphrase
+	var encryptedPassphrase = pojo.EncryptedPassphrase.Passphrase
 	var aesKey string
 	if blockIo.aesKey != "" { aesKey = blockIo.aesKey
 	} else {aesKey = lib.PinToAesKey(pin) }
-	privKey := lib.ExtractKeyFromEncryptedPassphrase(encrypted_passphrase,aesKey)
-	pubKey := lib.ExtractPubKeyFromEncryptedPassphrase(encrypted_passphrase,aesKey)
+	privKey := lib.ExtractKeyFromEncryptedPassphrase(encryptedPassphrase,aesKey)
+	pubKey := lib.ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase,aesKey)
 	if pubKey != pojo.EncryptedPassphrase.SignerPublicKey {
-		fmt.Println("Public key mismatch. Invalid Secret PIN detected.")
-		return nil
+		panic("Public key mismatch. Invalid Secret PIN detected.")
 	}
 
 	for i := 0; i < len(pojo.Inputs); i++ {
@@ -216,12 +164,11 @@ func (blockIo *Client) _sweep(Method string, Path string, args string) map[strin
 	err := json.Unmarshal([]byte(args), &argsObj)
 
 	if err != nil {
-		fmt.Println("error converting json:", err)
-		return nil
+		panic(err)
 	}
 
 	if argsObj["to_address"] == nil {
-		fmt.Println("Missing mandatory private_key argument.")
+		panic("Missing mandatory private_key argument.")
 	}
 
 	privKeyStr := argsObj["private_key"].(string)
@@ -237,8 +184,7 @@ func (blockIo *Client) _sweep(Method string, Path string, args string) map[strin
 	var pojo SignatureData
 	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
-		fmt.Println("Invalid response conversion:", err)
-		return nil
+		panic(err)
 	}
 	if pojo.ReferenceID == "" {
 		return res
@@ -276,8 +222,10 @@ func (blockIo *Client) _request(Method string, Path string, args string) map[str
 	res = nil
 	err := json.Unmarshal([]byte(string(jsonString)), &res)
 	if err != nil {
-		fmt.Println("Error unmarshalling response:", err)
-		return nil
+		panic(err)
+	}
+	if res == nil {
+		panic("No response from API server")
 	}
 	return res
 }

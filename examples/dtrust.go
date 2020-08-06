@@ -19,7 +19,7 @@ func dtrust() BlockIo.Client {
 	}
 	api_key := os.Getenv("API_KEY")
 	pin := os.Getenv("PIN")
-	blockIo.Instantiate(api_key,pin,2,"")
+	blockIo.Instantiate(api_key,pin,2, BlockIo.Options{})
 
 	return blockIo
 }

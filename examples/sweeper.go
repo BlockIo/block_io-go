@@ -16,7 +16,7 @@ func sweeper() BlockIo.Client {
 	}
 
 	api_key := os.Getenv("API_KEY")
-	blockIo.Instantiate(api_key,"",2,"")
+	blockIo.Instantiate(api_key,"",2, BlockIo.Options{})
 
 	return blockIo
 }
