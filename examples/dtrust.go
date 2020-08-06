@@ -43,26 +43,45 @@ func RunDtrustExample() {
 	}
 
 	signers := strings.Join(pubKeys, ",")
-	res := blockIo.GetNewDtrustAddress("{\"label\": \"" + dtrustAddressLabel + "\", \"public_keys\": \"" + signers + "\", \"required_signatures\": \"3\", \"address_type\": \"witness_v0\"}")
+	res := blockIo.GetNewDtrustAddress(map[string]interface{}{
+		"labels":dtrustAddressLabel,
+		"public_keys":signers,
+		"required_signatures":"3",
+		"address_type":"witness_v0",
+	})
 	if res["error_message"] != nil {
 		fmt.Println("Error: ", res["error_message"])
 
 		res = nil
-		res = blockIo.GetDtrustAddressByLabel("{\"label\": \"" + dtrustAddressLabel + "\"}")
+		res = blockIo.GetDtrustAddressByLabel(map[string]interface{}{
+			"labels":dtrustAddress,
+		})
 	}
 	dtrustAddress = fmt.Sprintf("%v", res["address"])
 	fmt.Println("Our dTrust Address:", dtrustAddress)
 	res = nil
-	res = blockIo.WithdrawFromLabels("{\"from_labels\": \"default\", \"to_address\": \"" + dtrustAddress + "\", \"amounts\": \"0.001\"}");
+	res = blockIo.WithdrawFromLabels(map[string]interface{}{
+		"from_labels":"default",
+		"to_address":dtrustAddress,
+		"amounts":"0.001",
+	})
 	fmt.Println("Withdrawal Response:", res)
 	res = nil
-	res = blockIo.GetDtrustAddressBalance("{\"label\": \"" + dtrustAddressLabel + "\"}")
+	res = blockIo.GetDtrustAddressBalance(map[string]interface{}{
+		"label":dtrustAddressLabel,
+	})
 	fmt.Println("Dtrust address label Balance: ", res);
 	res = nil
-	res = blockIo.GetAddressByLabel("{\"label\": \"default\"}")
+	res = blockIo.GetAddressByLabel(map[string]interface{}{
+		"label":"default",
+	})
 	normalAddress := fmt.Sprintf("%v", res["address"])
 	fmt.Println("Withdrawing from dtrust_address_label to the 'default' label in normal multisig")
-	res = blockIo.WithdrawFromDtrustAddress("{\"from_labels\": \"" + dtrustAddressLabel + "\", \"to_address\": \"" + normalAddress + "\", \"amounts\": \"0.0009\"}");
+	res = blockIo.WithdrawFromDtrustAddress(map[string]interface{}{
+		"from_labels":dtrustAddressLabel,
+		"to_address":normalAddress,
+		"amounts":"0.0009",
+	})
 	fmt.Println("Withdraw from Dtrust Address response: ", res)
 	jsonString, _ := json.Marshal(res)
 	var pojo BlockIo.SignatureData
@@ -84,5 +103,8 @@ func RunDtrustExample() {
 
 	fmt.Println(blockIo.SignAndFinalizeWithdrawal(string(pojoMarshalled)))
 	fmt.Println("Get transactions sent by our dtrust_address_label address: ")
-	fmt.Println(blockIo.GetDtrustTransactions("{\"type\": \"sent\", \"labels\": \"" + dtrustAddressLabel + "\"}"))
+	fmt.Println(blockIo.GetDtrustTransactions(map[string]interface{}{
+		"type":"sent",
+		"labels":dtrustAddressLabel,
+	}))
 }

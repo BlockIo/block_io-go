@@ -26,12 +26,15 @@ func maxWithdrawal() BlockIo.Client {
 func RunMaxWithdrawalExample() {
 	blockIo := maxWithdrawal()
 
-	var balance string = blockIo.GetBalance("{}")["available_balance"].(string)
+	var balance string = blockIo.GetBalance(nil)["available_balance"].(string)
 
-	fmt.Print("Balance:", balance)
+	fmt.Println("Balance:", balance)
 
 	for {
-		res := blockIo.Withdraw("{\"to_address\": \"" + os.Getenv("TO_ADDRESS") + "\", \"amount\": \"" + balance + "\"}")
+		res := blockIo.Withdraw(map[string]interface{}{
+			"to_address":os.Getenv("TO_ADDRESS"),
+			"amount": balance,
+		})
 		if res["reference_id"] != nil { fmt.Println(res) }
 
 
@@ -43,11 +46,14 @@ func RunMaxWithdrawalExample() {
 
 		if maxWithdraw == 0 { break }
 
-		blockIo.Withdraw("{\"to_address\": \"" + os.Getenv("TO_ADDRESS") + "\", \"amount\": \"" + maxWithdrawString + "\"}");
+		blockIo.Withdraw(map[string]interface{}{
+			"to_address":os.Getenv("TO_ADDRESS"),
+			"amount":maxWithdrawString,
+		})
 
 		break
 	}
 
-	balance = blockIo.GetBalance("{}")["available_balance"].(string)
+	balance = blockIo.GetBalance(nil)["available_balance"].(string)
 	fmt.Println("Final Balance:", balance)
 }

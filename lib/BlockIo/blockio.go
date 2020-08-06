@@ -101,30 +101,23 @@ func (blockIo *Client) post(jsonInput string, path string) string {
 	return resp.String()
 }
 
-func (blockIo *Client) _withdraw(Method string, Path string, args string) map[string]interface{} {
-
-	var argsObj map[string]interface{}
-
-	err := json.Unmarshal([]byte(args), &argsObj)
-
-	if err != nil {
-		panic(err)
-	}
+func (blockIo *Client) _withdraw(Method string, Path string, args map[string]interface{}) map[string]interface{} {
 
 	var pin string
-	if argsObj["pin"] != nil {
-		pin = argsObj["pin"].(string)
+	if args["pin"] != nil {
+		pin = args["pin"].(string)
 	} else {
 		pin = blockIo.pin
 	}
-	argsObj["pin"] = ""
+	args["pin"] = ""
 	if pin != "" {
 	}
-	res := blockIo._request(Method, Path, args)
+	argsObj, _ := json.Marshal(args)
+	res := blockIo._request(Method, Path, string(argsObj))
 
 	jsonString, _ := json.Marshal(res)
 	var pojo SignatureData
-	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
+	err := json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
 		panic(err)
 	}
@@ -157,32 +150,24 @@ func (blockIo *Client) _withdraw(Method string, Path string, args string) map[st
 	return blockIo._request(Method,"sign_and_finalize_withdrawal",string(pojoMarshalled))
 }
 
-func (blockIo *Client) _sweep(Method string, Path string, args string) map[string]interface{} {
+func (blockIo *Client) _sweep(Method string, Path string, args  map[string]interface{}) map[string]interface{} {
 
-	var argsObj map[string]interface{}
-
-	err := json.Unmarshal([]byte(args), &argsObj)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if argsObj["to_address"] == nil {
+	if args["to_address"] == nil {
 		panic("Missing mandatory private_key argument.")
 	}
 
-	privKeyStr := argsObj["private_key"].(string)
+	privKeyStr := args["private_key"].(string)
 	keyFromWif := lib.FromWIF(privKeyStr)
-	argsObj["public_key"] = lib.PubKeyFromWIF(privKeyStr)
-	argsObj["private_key"] = ""
+	args["public_key"] = lib.PubKeyFromWIF(privKeyStr)
+	args["private_key"] = ""
 
-	argsObjMarshalled,_ := json.Marshal(argsObj)
+	argsObjMarshalled,_ := json.Marshal(args)
 
 	res := blockIo._request(Method, Path, string(argsObjMarshalled))
 
 	jsonString, _ := json.Marshal(res)
 	var pojo SignatureData
-	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
+	err := json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
 		panic(err)
 	}
