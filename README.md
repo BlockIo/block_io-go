@@ -17,12 +17,12 @@ It's super easy to get started. In your code, do this:
     blockIo.Instantiate(apiKey, pin, version, BlockIo.Options{})
 
     // print the account balance request's response
-    res, err = blockIo.GetBalance(map[string]interface{}{})
+    res, err := blockIo.GetBalance(map[string]interface{}{})
 
     // print the response of a withdrawal request
     // 'SECRET_PIN' is only required if you did not specify it at 
     // class initialization time.
-    res, _ = blockIo.Withdraw(map[string]interface{}{
+    res, _ := blockIo.Withdraw(map[string]interface{}{
 		"from_labels": "default",
 		"to_label": "testDest15",
 		"amount":"2.5",
