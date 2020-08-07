@@ -55,15 +55,13 @@ func ExtractKeyFromPassphrase(HexPass string) string {
 func ExtractKeyFromPassphraseString(pass string) string {
 	password := []byte(utf8string.NewString(pass).String())
 	hashed := sha256.Sum256(password)
-	UsableHashed := hashed[:]
-	return hex.EncodeToString(UsableHashed)
+	usableHashed := hashed[:]
+	return hex.EncodeToString(usableHashed)
 }
 
 func ExtractPubKeyFromPassphraseString(pass string) string {
-	password := []byte(utf8string.NewString(pass).String())
-	hashed := sha256.Sum256(password)
-	UsableHashed := hashed[:]
-	result := btc.PublicFromPrivate(UsableHashed, true)
+	privKey, _ := hex.DecodeString(ExtractKeyFromPassphraseString(pass))
+	result := btc.PublicFromPrivate(privKey, true)
 	return hex.EncodeToString(result)
 }
 

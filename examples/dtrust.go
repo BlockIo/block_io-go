@@ -61,9 +61,9 @@ func RunDtrustExample() {
 	fmt.Println("Our dTrust Address:", dtrustAddress)
 	res = nil
 	res = blockIo.WithdrawFromLabels(map[string]interface{}{
-		"from_labels":"default",
+		"from_labels":"shibe1",
 		"to_address":dtrustAddress,
-		"amounts":"0.001",
+		"amounts":"0.1",
 	})
 	fmt.Println("Withdrawal Response:", res)
 	res = nil
@@ -73,10 +73,10 @@ func RunDtrustExample() {
 	fmt.Println("Dtrust address label Balance: ", res);
 	res = nil
 	res = blockIo.GetAddressByLabel(map[string]interface{}{
-		"label":"default",
+		"label":"shibe1",
 	})
 	normalAddress := fmt.Sprintf("%v", res["address"])
-	fmt.Println("Withdrawing from dtrust_address_label to the 'default' label in normal multisig")
+	fmt.Println("Withdrawing from dtrust_address_label to the 'shibe' label in normal multisig")
 	res = blockIo.WithdrawFromDtrustAddress(map[string]interface{}{
 		"from_labels":dtrustAddressLabel,
 		"to_address":normalAddress,
