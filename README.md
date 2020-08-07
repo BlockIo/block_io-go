@@ -26,7 +26,7 @@ It's super easy to get started. In your code, do this:
 		"from_labels": "default",
 		"to_label": "testDest15",
 		"amount":"2.5",
-        "pin":pin
+        "pin":pin,
 	})  
 
 ##### for a more detailed guide on usage, check the examples folder in the repo 
