@@ -24,24 +24,30 @@ func basic() BlockIo.Client {
 
 func RunBasicExample(){
 	blockIo := basic()
-	fmt.Println("Get New Address: ", blockIo.GetNewAddress(map[string]interface{}{
+	res, _ := blockIo.GetNewAddress(map[string]interface{}{
 		"label":"testDest15",
-	}))
-	fmt.Println("Withdraw from labels: ", blockIo.WithdrawFromLabels(map[string]interface{}{
+	})
+	fmt.Println("Get New Address: ", res)
+	res, _ = blockIo.WithdrawFromLabels(map[string]interface{}{
 		"from_labels": "default",
 		"to_label": "testDest15",
 		"amount":"2.5",
-	}))
-	fmt.Println("Get Address Balance: ", blockIo.GetAddressBalance(map[string]interface{}{
+	})
+	fmt.Println("Withdraw from labels: ", res)
+	res, _ = blockIo.GetAddressBalance(map[string]interface{}{
 		"labels": "default, testDest15",
-	}))
-	fmt.Println("Get Sent Transactions: ", blockIo.GetTransactions(map[string]interface{}{
+	})
+	fmt.Println("Get Address Balance: ", res)
+	res, _ = blockIo.GetTransactions(map[string]interface{}{
 		"type":"sent",
-	}))
-	fmt.Println("Get Received Transactions: ", blockIo.GetTransactions(map[string]interface{}{
+	})
+	fmt.Println("Get Sent Transactions: ", res)
+	res, _ = blockIo.GetTransactions(map[string]interface{}{
 		"type":"received",
-	}))
-	fmt.Println("Get Current Price: ", blockIo.GetCurrentPrice(map[string]interface{}{
+	})
+	fmt.Println("Get Received Transactions: ", res)
+	res, _ = blockIo.GetCurrentPrice(map[string]interface{}{
 		"base_price":"BTC",
-	}))
+	})
+	fmt.Println("Get Current Price: ", res)
 }

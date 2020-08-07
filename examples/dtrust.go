@@ -43,7 +43,7 @@ func RunDtrustExample() {
 	}
 
 	signers := strings.Join(pubKeys, ",")
-	res := blockIo.GetNewDtrustAddress(map[string]interface{}{
+	res, _ := blockIo.GetNewDtrustAddress(map[string]interface{}{
 		"labels":dtrustAddressLabel,
 		"public_keys":signers,
 		"required_signatures":"3",
@@ -53,31 +53,31 @@ func RunDtrustExample() {
 		fmt.Println("Error: ", res["error_message"])
 
 		res = nil
-		res = blockIo.GetDtrustAddressByLabel(map[string]interface{}{
+		res, _ = blockIo.GetDtrustAddressByLabel(map[string]interface{}{
 			"labels":dtrustAddress,
 		})
 	}
 	dtrustAddress = fmt.Sprintf("%v", res["address"])
 	fmt.Println("Our dTrust Address:", dtrustAddress)
 	res = nil
-	res = blockIo.WithdrawFromLabels(map[string]interface{}{
+	res, _ = blockIo.WithdrawFromLabels(map[string]interface{}{
 		"from_labels":"shibe1",
 		"to_address":dtrustAddress,
 		"amounts":"0.1",
 	})
 	fmt.Println("Withdrawal Response:", res)
 	res = nil
-	res = blockIo.GetDtrustAddressBalance(map[string]interface{}{
+	res, _ = blockIo.GetDtrustAddressBalance(map[string]interface{}{
 		"label":dtrustAddressLabel,
 	})
 	fmt.Println("Dtrust address label Balance: ", res);
 	res = nil
-	res = blockIo.GetAddressByLabel(map[string]interface{}{
+	res, _ = blockIo.GetAddressByLabel(map[string]interface{}{
 		"label":"shibe1",
 	})
 	normalAddress := fmt.Sprintf("%v", res["address"])
 	fmt.Println("Withdrawing from dtrust_address_label to the 'shibe' label in normal multisig")
-	res = blockIo.WithdrawFromDtrustAddress(map[string]interface{}{
+	res, _ = blockIo.WithdrawFromDtrustAddress(map[string]interface{}{
 		"from_labels":dtrustAddressLabel,
 		"to_address":normalAddress,
 		"amounts":"0.0009",

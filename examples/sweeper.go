@@ -32,7 +32,7 @@ func RunSweeperExample() {
 		return
 	}
 
-	res := blockIo.SweepFromAddress(map[string]interface{}{
+	res, _ := blockIo.SweepFromAddress(map[string]interface{}{
 		"to_address": os.Getenv("TO_ADDRESS"),
 		"private_key": os.Getenv("PRIVATE_KEY_FROM_ADDRESS"),
 		"from_address": os.Getenv("FROM_ADDRESS"),

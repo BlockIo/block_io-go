@@ -2,6 +2,7 @@ package BlockIo
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/go-resty/resty/v2"
 	"strconv"
 	"strings"
@@ -27,7 +28,7 @@ type Client struct {
 const defaultVersion = 2
 const defaultServer = ""
 const defaultPort = ""
-const host = "block.io"
+const host = "block.i"
 
 func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts Options) {
 
@@ -94,7 +95,7 @@ func (blockIo *Client) post(jsonInput string, path string) string {
 	return resp.String()
 }
 
-func (blockIo *Client) _withdraw(Method string, Path string, args map[string]interface{}) map[string]interface{} {
+func (blockIo *Client) _withdraw(Method string, Path string, args map[string]interface{}) (map[string]interface{}, error) {
 
 	var pin string
 	if args["pin"] != nil {
@@ -106,21 +107,23 @@ func (blockIo *Client) _withdraw(Method string, Path string, args map[string]int
 	if pin != "" {
 	}
 	argsObj, _ := json.Marshal(args)
-	res := blockIo._request(Method, Path, string(argsObj))
-
+	res, err := blockIo._request(Method, Path, string(argsObj))
+	if err != nil {
+		return map[string]interface{}{}, err
+	}
 	jsonString, _ := json.Marshal(res)
 	var pojo SignatureData
-	err := json.Unmarshal([]byte(string(jsonString)), &pojo)
+	err = json.Unmarshal(jsonString, &pojo)
 	if err != nil {
-		panic(err)
+		return map[string]interface{}{}, err
 	}
 	if (pojo.ReferenceID == "" || pojo.EncryptedPassphrase == EncryptedPassphrase{} ||
 		pojo.EncryptedPassphrase.Passphrase == "") {
-		return res
+		return res, nil
 	}
 	if pin == "" {
 		if blockIo.options.AllowNoPin {
-			return res
+			return res, nil
 		}
 	}
 	var encryptedPassphrase = pojo.EncryptedPassphrase.Passphrase
@@ -130,7 +133,7 @@ func (blockIo *Client) _withdraw(Method string, Path string, args map[string]int
 	privKey := lib.ExtractKeyFromEncryptedPassphrase(encryptedPassphrase,aesKey)
 	pubKey := lib.ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase,aesKey)
 	if pubKey != pojo.EncryptedPassphrase.SignerPublicKey {
-		panic("Public key mismatch. Invalid Secret PIN detected.")
+		return map[string]interface{}{}, errors.New("Public key mismatch. Invalid Secret PIN detected.")
 	}
 
 	for i := 0; i < len(pojo.Inputs); i++ {
@@ -143,10 +146,10 @@ func (blockIo *Client) _withdraw(Method string, Path string, args map[string]int
 	return blockIo._request(Method,"sign_and_finalize_withdrawal",string(pojoMarshalled))
 }
 
-func (blockIo *Client) _sweep(Method string, Path string, args  map[string]interface{}) map[string]interface{} {
+func (blockIo *Client) _sweep(Method string, Path string, args  map[string]interface{}) (map[string]interface{}, error) {
 
 	if args["to_address"] == nil {
-		panic("Missing mandatory private_key argument.")
+		return map[string]interface{}{}, errors.New("Missing mandatory private_key argument.")
 	}
 
 	privKeyStr := args["private_key"].(string)
@@ -156,16 +159,18 @@ func (blockIo *Client) _sweep(Method string, Path string, args  map[string]inter
 
 	argsObjMarshalled,_ := json.Marshal(args)
 
-	res := blockIo._request(Method, Path, string(argsObjMarshalled))
-
+	res, err := blockIo._request(Method, Path, string(argsObjMarshalled))
+	if err != nil {
+		return map[string]interface{}{}, err
+	}
 	jsonString, _ := json.Marshal(res)
 	var pojo SignatureData
-	err := json.Unmarshal([]byte(string(jsonString)), &pojo)
+	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
-		panic(err)
+		return map[string]interface{}{}, err
 	}
 	if pojo.ReferenceID == "" {
-		return res
+		return map[string]interface{}{}, errors.New("Empty Reference ID")
 	}
 
 	for i := 0; i < len(pojo.Inputs); i++ {
@@ -178,7 +183,7 @@ func (blockIo *Client) _sweep(Method string, Path string, args  map[string]inter
 	return blockIo._request(Method,"sign_and_finalize_sweep",string(pojoMarshalled))
 }
 
-func (blockIo *Client) _request(Method string, Path string, args string) map[string]interface{} {
+func (blockIo *Client) _request(Method string, Path string, args string) (map[string]interface{}, error) {
 	var res map[string]interface{}
 	if Method == "POST" {
 		if strings.Contains(Path, "sign_and_finalize") {
@@ -198,14 +203,14 @@ func (blockIo *Client) _request(Method string, Path string, args string) map[str
 	}
 	jsonString, _ := json.Marshal(res["data"])
 	res = nil
-	err := json.Unmarshal([]byte(string(jsonString)), &res)
+	err := json.Unmarshal(jsonString, &res)
 	if err != nil {
-		panic(err)
+		return map[string]interface{}{}, err
 	}
 	if res == nil {
-		panic("No response from API server")
+		return map[string]interface{}{}, errors.New("No response from API server")
 	}
-	return res
+	return res, nil
 }
 
 func (blockIo *Client) constructUrl(path string) string {
