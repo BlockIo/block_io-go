@@ -9,7 +9,7 @@ import (
 	"github.com/BlockIo/block_io-go/lib"
 )
 type Options struct {
-	AllowNoPin string
+	AllowNoPin bool
 	ApiUrl     string
 }
 type Client struct {
@@ -34,9 +34,6 @@ func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts 
 	blockIo.defaultPort = ""
 	blockIo.host = "block.io"
 
-	if opts.AllowNoPin == "" {
-		opts.AllowNoPin = "false"
-	}
 	blockIo.options = opts
 	blockIo.apiUrl = blockIo.options.ApiUrl
 
@@ -125,7 +122,7 @@ func (blockIo *Client) _withdraw(Method string, Path string, args map[string]int
 		return res
 	}
 	if pin == "" {
-		if blockIo.options.AllowNoPin == "true" {
+		if blockIo.options.AllowNoPin {
 			return res
 		}
 	}
