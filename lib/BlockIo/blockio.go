@@ -50,19 +50,13 @@ func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts 
 		blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
 	}
 
-	var serverString string
-	if blockIo.server != "" {
-		serverString = blockIo.server + "."
-	} else {
-		serverString = blockIo.server
+	serverString := blockIo.server
+	if serverString != "" {
+		serverString = serverString + "."
 	}
 
-	var portString string
-	if blockIo.port != "" {
-		portString = ":" + blockIo.port
-	} else {
-		portString = blockIo.port
-	}
+	portString := ""
+	if blockIo.port != "" { portString = ":" + blockIo.port }
 
 	if blockIo.apiUrl == "" {
 		blockIo.apiUrl = "https://" + serverString + host + portString + "/api/v" + strconv.Itoa(blockIo.version) + "/"
@@ -220,15 +214,19 @@ func (blockIo *Client) _request(Method string, Path string, args string) (map[st
 		if postErr != nil {
 			return map[string]interface{}{}, postErr
 		}
-	_:
-		json.Unmarshal([]byte(resString), &res)
+		marshalErr := json.Unmarshal([]byte(resString), &res)
+		if marshalErr != nil {
+			return map[string]interface{}{}, marshalErr
+		}
 	} else {
 		resString, getErr := blockIo.get(Path)
 		if getErr != nil {
 			return map[string]interface{}{}, getErr
 		}
-	_:
-		json.Unmarshal([]byte(resString), &res)
+		marshalErr := json.Unmarshal([]byte(resString), &res)
+		if marshalErr != nil {
+			return map[string]interface{}{}, marshalErr
+		}
 	}
 	jsonString, dataErr := json.Marshal(res["data"])
 	if dataErr != nil {
