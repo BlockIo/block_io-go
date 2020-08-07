@@ -150,7 +150,7 @@ func (blockIo *Client) _sweep(Method string, Path string, args  map[string]inter
 	}
 
 	privKeyStr := args["private_key"].(string)
-	keyFromWif := lib.FromWIF(privKeyStr)
+	keyFromWif, _ := lib.FromWIF(privKeyStr)
 	args["public_key"] = lib.PubKeyFromWIF(privKeyStr)
 	args["private_key"] = ""
 

@@ -9,47 +9,33 @@ import (
 	"log"
 )
 
-func FromWIF(PrivKey string) string {
-	var ExtendedKeyBytes []byte = btc.Decodeb58(PrivKey)
-	ExtendedKeyBytes = ExtendedKeyBytes[0:34]
+func FromWIF(privKey string) (string, bool) {
+	var extendedKeyBytes []byte = btc.Decodeb58(privKey)
+	extendedKeyBytes = extendedKeyBytes[0:34]
 
-	ExtendedKeyBytes = ExtendedKeyBytes[1:]
-
-	if len(ExtendedKeyBytes) == 33 {
-		if ExtendedKeyBytes[32] != 0x01 {
-			log.Fatal(errors.New("Invalid compression flag" + " PrivKey"))
-		}
-		ExtendedKeyBytes = ExtendedKeyBytes[0 : len(ExtendedKeyBytes)-1]
-	}
-
-	if len(ExtendedKeyBytes) != 32 {
-		log.Fatal(errors.New("Invalid WIF payload length"))
-	}
-
-	return hex.EncodeToString(ExtendedKeyBytes)
-
-}
-
-func PubKeyFromWIF(PrivKey string) string {
-
-	var ExtendedKeyBytes []byte = btc.Decodeb58(PrivKey)
-	ExtendedKeyBytes = ExtendedKeyBytes[0:34]
+	extendedKeyBytes = extendedKeyBytes[1:]
 	compressed := false
-	ExtendedKeyBytes = ExtendedKeyBytes[1:]
-
-	if len(ExtendedKeyBytes) == 33 {
-		if ExtendedKeyBytes[32] != 0x01 {
+	if len(extendedKeyBytes) == 33 {
+		if extendedKeyBytes[32] != 0x01 {
 			log.Fatal(errors.New("Invalid compression flag" + " PrivKey"))
 		}
-		ExtendedKeyBytes = ExtendedKeyBytes[0 : len(ExtendedKeyBytes)-1]
+		extendedKeyBytes = extendedKeyBytes[0 : len(extendedKeyBytes)-1]
 		compressed = true
 	}
 
-	if len(ExtendedKeyBytes) != 32 {
+	if len(extendedKeyBytes) != 32 {
 		log.Fatal(errors.New("Invalid WIF payload length"))
 	}
 
-	result := btc.PublicFromPrivate(ExtendedKeyBytes, compressed)
+	return hex.EncodeToString(extendedKeyBytes), compressed
+
+}
+
+func PubKeyFromWIF(privKey string) string {
+
+	privKeyFromWifHex, compressed := FromWIF(privKey)
+	privKeyFromWifBytes, _ := hex.DecodeString(privKeyFromWifHex)
+	result := btc.PublicFromPrivate(privKeyFromWifBytes, compressed)
 
 	return hex.EncodeToString(result)
 }
