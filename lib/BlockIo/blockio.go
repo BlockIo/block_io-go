@@ -28,7 +28,7 @@ type Client struct {
 const defaultVersion = 2
 const defaultServer = ""
 const defaultPort = ""
-const host = "block.i"
+const host = "block.io"
 
 func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts Options) {
 
