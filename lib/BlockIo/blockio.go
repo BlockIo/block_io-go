@@ -19,20 +19,17 @@ type Client struct {
 	aesKey         string
 	apiKey         string
 	version        int
-	defaultVersion int
 	server         string
-	defaultServer  string
 	port           string
-	defaultPort    string
-	host           string
 	restClient     *resty.Client
 }
 
+const defaultVersion = 2
+const defaultServer = ""
+const defaultPort = ""
+const host = "block.io"
+
 func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts Options) {
-	blockIo.defaultVersion = 2
-	blockIo.defaultServer = ""
-	blockIo.defaultPort = ""
-	blockIo.host = "block.io"
 
 	blockIo.options = opts
 	blockIo.apiUrl = blockIo.options.ApiUrl
@@ -42,12 +39,12 @@ func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts 
 
 	blockIo.apiKey = apiKey
 	if version == -1 {
-		blockIo.version = blockIo.defaultVersion
+		blockIo.version = defaultVersion
 	} else {
 		blockIo.version = version
 	}
-	blockIo.server = blockIo.defaultServer
-	blockIo.port = blockIo.defaultPort
+	blockIo.server = defaultServer
+	blockIo.port = defaultPort
 	if blockIo.pin != "" {
 		blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
 	}
@@ -67,7 +64,7 @@ func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts 
 	}
 
 	if blockIo.apiUrl == "" {
-		blockIo.apiUrl = "https://" + serverString + blockIo.host + portString + "/api/v" + strconv.Itoa(blockIo.version) + "/"
+		blockIo.apiUrl = "https://" + serverString + host + portString + "/api/v" + strconv.Itoa(blockIo.version) + "/"
 	}
 	blockIo.restClient = resty.New()
 }
