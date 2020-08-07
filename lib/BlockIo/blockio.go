@@ -70,29 +70,32 @@ func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts 
 	blockIo.restClient = resty.New()
 }
 
-func (blockIo *Client) get(path string) string {
+func (blockIo *Client) get(path string) (string, error) {
 	client := resty.New()
 
-	resp, _ := client.R().
+	resp, err := client.R().
 		EnableTrace().
 		Get(blockIo.constructUrl(path))
 
-	return resp.String()
+	return resp.String(), err
 
 }
-func (blockIo *Client) post(jsonInput string, path string) string {
+func (blockIo *Client) post(jsonInput string, path string) (string, error) {
 	var argsObj map[string]interface{}
-	_ = json.Unmarshal([]byte(jsonInput), &argsObj)
+	parseErr := json.Unmarshal([]byte(jsonInput), &argsObj)
 
+	if parseErr != nil {
+		return "", parseErr
+	}
 
 	client := resty.New()
 
-	resp, _ := client.R().
+	resp, err := client.R().
 		SetHeader("Accept", "application/json").
 		SetBody(argsObj).
 		Post(blockIo.constructUrl(path))
 
-	return resp.String()
+	return resp.String(), err
 }
 
 func (blockIo *Client) _withdraw(Method string, Path string, args map[string]interface{}) (map[string]interface{}, error) {
@@ -104,14 +107,18 @@ func (blockIo *Client) _withdraw(Method string, Path string, args map[string]int
 		pin = blockIo.pin
 	}
 	args["pin"] = ""
-	if pin != "" {
+	argsObj, argsErr := json.Marshal(args)
+	if argsErr != nil {
+		return map[string]interface{}{}, argsErr
 	}
-	argsObj, _ := json.Marshal(args)
 	res, err := blockIo._request(Method, Path, string(argsObj))
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	jsonString, _ := json.Marshal(res)
+	jsonString, resErr := json.Marshal(res)
+	if resErr != nil {
+		return map[string]interface{}{}, resErr
+	}
 	var pojo SignatureData
 	err = json.Unmarshal(jsonString, &pojo)
 	if err != nil {
@@ -142,7 +149,10 @@ func (blockIo *Client) _withdraw(Method string, Path string, args map[string]int
 		}
 	}
 	pojo.EncryptedPassphrase = EncryptedPassphrase{}
-	pojoMarshalled, _ := json.Marshal(pojo)
+	pojoMarshalled, pojoErr := json.Marshal(pojo)
+	if pojoErr != nil {
+		return map[string]interface{}{}, pojoErr
+	}
 	return blockIo._request(Method,"sign_and_finalize_withdrawal",string(pojoMarshalled))
 }
 
@@ -157,13 +167,20 @@ func (blockIo *Client) _sweep(Method string, Path string, args  map[string]inter
 	args["public_key"] = lib.PubKeyFromWIF(privKeyStr)
 	args["private_key"] = ""
 
-	argsObjMarshalled,_ := json.Marshal(args)
+	argsObjMarshalled, argsErr := json.Marshal(args)
+	if argsErr != nil {
+		return map[string]interface{}{}, argsErr
+	}
 
 	res, err := blockIo._request(Method, Path, string(argsObjMarshalled))
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	jsonString, _ := json.Marshal(res)
+	jsonString, resErr := json.Marshal(res)
+
+	if resErr != nil {
+		return map[string]interface{}{}, resErr
+	}
 	var pojo SignatureData
 	err = json.Unmarshal([]byte(string(jsonString)), &pojo)
 	if err != nil {
@@ -179,7 +196,10 @@ func (blockIo *Client) _sweep(Method string, Path string, args  map[string]inter
 		}
 	}
 	pojo.EncryptedPassphrase = EncryptedPassphrase{}
-	pojoMarshalled, _ := json.Marshal(pojo)
+	pojoMarshalled, pojoErr := json.Marshal(pojo)
+	if pojoErr != nil {
+		return map[string]interface{}{}, pojoErr
+	}
 	return blockIo._request(Method,"sign_and_finalize_sweep",string(pojoMarshalled))
 }
 
@@ -190,18 +210,30 @@ func (blockIo *Client) _request(Method string, Path string, args string) (map[st
 
 			var postObj = map[string]string{"signature_data": args}
 
-			temp, _ := json.Marshal(postObj)
+			temp, postMarshalErr := json.Marshal(postObj)
+			if postMarshalErr != nil {
+				return map[string]interface{}{}, postMarshalErr
+			}
 			args = string(temp)
 		}
-		resString := blockIo.post(args, Path)
+		resString, postErr := blockIo.post(args, Path)
+		if postErr != nil {
+			return map[string]interface{}{}, postErr
+		}
 	_:
 		json.Unmarshal([]byte(resString), &res)
 	} else {
-		resString := blockIo.get(Path)
+		resString, getErr := blockIo.get(Path)
+		if getErr != nil {
+			return map[string]interface{}{}, getErr
+		}
 	_:
 		json.Unmarshal([]byte(resString), &res)
 	}
-	jsonString, _ := json.Marshal(res["data"])
+	jsonString, dataErr := json.Marshal(res["data"])
+	if dataErr != nil {
+		return map[string]interface{}{}, dataErr
+	}
 	res = nil
 	err := json.Unmarshal(jsonString, &res)
 	if err != nil {
