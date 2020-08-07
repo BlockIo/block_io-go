@@ -29,7 +29,7 @@ It's super easy to get started. In your code, do this:
         "pin":pin,
 	})  
 
-##### for a more detailed guide on usage, check the examples folder in the repo 
+##### For a more detailed guide on usage, check the examples folder in the repo 
 
 ##### A note on passing json args to requests:
 
