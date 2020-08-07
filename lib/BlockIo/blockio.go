@@ -9,8 +9,8 @@ import (
 	"github.com/BlockIo/block_io-go/lib"
 )
 type Options struct {
-	allowNoPin 	string
-	apiUrl  	string
+	AllowNoPin string
+	ApiUrl     string
 }
 type Client struct {
 	options        Options
@@ -28,50 +28,49 @@ type Client struct {
 	restClient     *resty.Client
 }
 
-func (blockIo *Client) Instantiate(ApiKey string, Pin string, Version int, Opts Options) {
+func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts Options) {
 	blockIo.defaultVersion = 2
 	blockIo.defaultServer = ""
 	blockIo.defaultPort = ""
 	blockIo.host = "block.io"
 
-	if Opts.allowNoPin == "" {
-		Opts.allowNoPin = "false"
+	if opts.AllowNoPin == "" {
+		opts.AllowNoPin = "false"
 	}
-	blockIo.options = Opts
-	blockIo.apiUrl = blockIo.options.apiUrl
+	blockIo.options = opts
+	blockIo.apiUrl = blockIo.options.ApiUrl
 
-	blockIo.pin = Pin
+	blockIo.pin = pin
 	blockIo.aesKey = ""
 
-	blockIo.apiKey = ApiKey
-	if Version == -1 {
+	blockIo.apiKey = apiKey
+	if version == -1 {
 		blockIo.version = blockIo.defaultVersion
 	} else {
-		blockIo.version = Version
+		blockIo.version = version
 	}
 	blockIo.server = blockIo.defaultServer
 	blockIo.port = blockIo.defaultPort
-	if Pin != "" {
-		blockIo.pin = Pin
+	if blockIo.pin != "" {
 		blockIo.aesKey = lib.PinToAesKey(blockIo.pin)
 	}
 
-	var ServerString string
+	var serverString string
 	if blockIo.server != "" {
-		ServerString = blockIo.server + "."
+		serverString = blockIo.server + "."
 	} else {
-		ServerString = blockIo.server
+		serverString = blockIo.server
 	}
 
-	var PortString string
+	var portString string
 	if blockIo.port != "" {
-		PortString = ":" + blockIo.port
+		portString = ":" + blockIo.port
 	} else {
-		PortString = blockIo.port
+		portString = blockIo.port
 	}
 
 	if blockIo.apiUrl == "" {
-		blockIo.apiUrl = "https://" + ServerString + blockIo.host + PortString + "/api/v" + strconv.Itoa(blockIo.version) + "/"
+		blockIo.apiUrl = "https://" + serverString + blockIo.host + portString + "/api/v" + strconv.Itoa(blockIo.version) + "/"
 	}
 	blockIo.restClient = resty.New()
 }
@@ -126,7 +125,7 @@ func (blockIo *Client) _withdraw(Method string, Path string, args map[string]int
 		return res
 	}
 	if pin == "" {
-		if blockIo.options.allowNoPin == "true" {
+		if blockIo.options.AllowNoPin == "true" {
 			return res
 		}
 	}
@@ -190,7 +189,7 @@ func (blockIo *Client) _request(Method string, Path string, args string) map[str
 	if Method == "POST" {
 		if strings.Contains(Path, "sign_and_finalize") {
 
-			var postObj map[string]string = map[string]string{"signature_data": args}
+			var postObj = map[string]string{"signature_data": args}
 
 			temp, _ := json.Marshal(postObj)
 			args = string(temp)
