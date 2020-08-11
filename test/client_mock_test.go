@@ -141,7 +141,7 @@ func setupDtrustStub() {
 			}
 			var resp *http.Response
 			if check == true {
-				resp, err = httpmock.NewJsonResponse(500, "Error")
+				resp, err = httpmock.NewJsonResponse(400, "Bad Request")
 			} else {
 				resp, err = httpmock.NewJsonResponse(200, fileToString("data/success_response.json"))
 			}
@@ -200,7 +200,7 @@ func setupWithdrawStub() {
 			}
 			var resp *http.Response
 			if check == true {
-				resp, err = httpmock.NewJsonResponse(500, "Error")
+				resp, err = httpmock.NewJsonResponse(400, "Bad Request")
 			} else {
 				resp, err = httpmock.NewJsonResponse(200, fileToString("data/success_response.json"))
 			}
@@ -261,7 +261,7 @@ func setupSweepStub() {
 			}
 			var resp *http.Response
 			if check == true {
-				resp, err = httpmock.NewJsonResponse(500, "Error")
+				resp, err = httpmock.NewJsonResponse(400, "Bad Request")
 			} else {
 				resp, err = httpmock.NewJsonResponse(200, fileToString("data/success_response.json"))
 			}
@@ -325,7 +325,7 @@ func TestSweep(t *testing.T){
 		t.Error(err)
 	}
 	if resp["txid"]==nil {
-		t.Error("Withdraw Response not correct")
+		t.Error("Sweep Response not correct")
 	}
 }
 
@@ -339,7 +339,7 @@ func TestDtrust(t *testing.T){
 		t.Error(err)
 	}
 	if resp==nil {
-		t.Error("Withdraw Response not correct")
+		t.Error("Dtrust Response not correct")
 	}
 }
 
