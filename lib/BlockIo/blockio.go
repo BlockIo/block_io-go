@@ -14,21 +14,22 @@ type Options struct {
 	ApiUrl     string
 }
 type Client struct {
-	options        Options
-	apiUrl         string
-	pin            string
-	aesKey         string
-	apiKey         string
-	version        int
-	server         string
-	port           string
-	restClient     *resty.Client
+	options    Options
+	apiUrl     string
+	pin        string
+	aesKey     string
+	apiKey     string
+	version    int
+	server     string
+	port       string
+	RestClient *resty.Client
 }
 
 const defaultVersion = 2
 const defaultServer = ""
 const defaultPort = ""
 const host = "block.io"
+
 
 func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts Options) {
 
@@ -61,13 +62,12 @@ func (blockIo *Client) Instantiate(apiKey string, pin string, version int, opts 
 	if blockIo.apiUrl == "" {
 		blockIo.apiUrl = "https://" + serverString + host + portString + "/api/v" + strconv.Itoa(blockIo.version) + "/"
 	}
-	blockIo.restClient = resty.New()
+	blockIo.RestClient = resty.New()
 }
 
 func (blockIo *Client) get(path string) (string, error) {
-	client := resty.New()
 
-	resp, err := client.R().
+	resp, err := blockIo.RestClient.R().
 		EnableTrace().
 		Get(blockIo.constructUrl(path))
 
@@ -81,14 +81,10 @@ func (blockIo *Client) post(jsonInput string, path string) (string, error) {
 	if parseErr != nil {
 		return "", parseErr
 	}
-
-	client := resty.New()
-
-	resp, err := client.R().
+	resp, err := blockIo.RestClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(argsObj).
 		Post(blockIo.constructUrl(path))
-
 	return resp.String(), err
 }
 
@@ -201,9 +197,7 @@ func (blockIo *Client) _request(Method string, Path string, args string) (map[st
 	var res map[string]interface{}
 	if Method == "POST" {
 		if strings.Contains(Path, "sign_and_finalize") {
-
 			var postObj = map[string]string{"signature_data": args}
-
 			temp, postMarshalErr := json.Marshal(postObj)
 			if postMarshalErr != nil {
 				return map[string]interface{}{}, postMarshalErr
