@@ -114,27 +114,27 @@ func setupDtrustStub() {
 			if err := json.NewDecoder(req.Body).Decode(&responseBody); err != nil {
 				return httpmock.NewStringResponse(400, ""), nil
 			}
-			var pojo BlockIo.SignatureData
-			err := json.Unmarshal([]byte(responseBody["signature_data"].(string)), &pojo)
+			var responseToCheck BlockIo.SignatureData
+			err := json.Unmarshal([]byte(responseBody["signature_data"].(string)), &responseToCheck)
 
-			var pojo2 BlockIo.SignatureData
-			err = json.Unmarshal([]byte(signAndFinalizeDtrust["signature_data"].(string)), &pojo2)
+			var controlResponse BlockIo.SignatureData
+			err = json.Unmarshal([]byte(signAndFinalizeDtrust["signature_data"].(string)), &controlResponse)
 			check := false
 
-			if pojo.ReferenceID != pojo2.ReferenceID {
+			if responseToCheck.ReferenceID != controlResponse.ReferenceID {
 				check = true
 			}
-			if len(pojo.Inputs) != len(pojo2.Inputs){
+			if len(responseToCheck.Inputs) != len(controlResponse.Inputs){
 
 				check = true
 			}
-			for i := 0; i < len(pojo.Inputs); i++ {
-				if pojo.Inputs[i].DataToSign != pojo2.Inputs[i].DataToSign || pojo.Inputs[i].InputNo != pojo2.Inputs[i].InputNo ||
-					pojo.Inputs[i].SignaturesNeeded != pojo2.Inputs[i].SignaturesNeeded {
+			for i := 0; i < len(responseToCheck.Inputs); i++ {
+				if responseToCheck.Inputs[i].DataToSign != controlResponse.Inputs[i].DataToSign || responseToCheck.Inputs[i].InputNo != controlResponse.Inputs[i].InputNo ||
+					responseToCheck.Inputs[i].SignaturesNeeded != controlResponse.Inputs[i].SignaturesNeeded {
 					check = true
 				}
-				for j := 0; j < len(pojo.Inputs[i].Signers); j++ {
-					if pojo.Inputs[i].Signers[j]!=pojo2.Inputs[i].Signers[j] {
+				for j := 0; j < len(responseToCheck.Inputs[i].Signers); j++ {
+					if responseToCheck.Inputs[i].Signers[j]!= controlResponse.Inputs[i].Signers[j] {
 						check = true
 					}
 				}
@@ -173,27 +173,27 @@ func setupWithdrawStub() {
 			if err := json.NewDecoder(req.Body).Decode(&responseBody); err != nil {
 				return httpmock.NewStringResponse(400, "error parsing request body"), nil
 			}
-			var pojo BlockIo.SignatureData
-			err := json.Unmarshal([]byte(responseBody["signature_data"].(string)), &pojo)
+			var responseToCheck BlockIo.SignatureData
+			err := json.Unmarshal([]byte(responseBody["signature_data"].(string)), &responseToCheck)
 
-			var pojo2 BlockIo.SignatureData
-			err = json.Unmarshal([]byte(signAndFinalizeWithdraw["signature_data"].(string)), &pojo2)
+			var controlResponse BlockIo.SignatureData
+			err = json.Unmarshal([]byte(signAndFinalizeWithdraw["signature_data"].(string)), &controlResponse)
 
 			check := false
 
-			if pojo.ReferenceID != pojo2.ReferenceID {
+			if responseToCheck.ReferenceID != controlResponse.ReferenceID {
 				check = true
 			}
-			if len(pojo.Inputs) != len(pojo2.Inputs){
+			if len(responseToCheck.Inputs) != len(controlResponse.Inputs){
 				check = true
 			}
-			for i := 0; i < len(pojo.Inputs); i++ {
-				if pojo.Inputs[i].DataToSign != pojo2.Inputs[i].DataToSign || pojo.Inputs[i].InputNo != pojo2.Inputs[i].InputNo ||
-					pojo.Inputs[i].SignaturesNeeded != pojo2.Inputs[i].SignaturesNeeded {
+			for i := 0; i < len(responseToCheck.Inputs); i++ {
+				if responseToCheck.Inputs[i].DataToSign != controlResponse.Inputs[i].DataToSign || responseToCheck.Inputs[i].InputNo != controlResponse.Inputs[i].InputNo ||
+					responseToCheck.Inputs[i].SignaturesNeeded != controlResponse.Inputs[i].SignaturesNeeded {
 					check = true
 				}
-				for j := 0; j < len(pojo.Inputs[i].Signers); j++ {
-					if pojo.Inputs[i].Signers[j]!=pojo2.Inputs[i].Signers[j] {
+				for j := 0; j < len(responseToCheck.Inputs[i].Signers); j++ {
+					if responseToCheck.Inputs[i].Signers[j]!= controlResponse.Inputs[i].Signers[j] {
 						check = true
 					}
 				}
@@ -231,30 +231,30 @@ func setupSweepStub() {
 			if err := json.NewDecoder(req.Body).Decode(&responseBody); err != nil {
 				return httpmock.NewStringResponse(400, "error parsing request body"), nil
 			}
-			var pojo BlockIo.SignatureData
-			err := json.Unmarshal([]byte(responseBody["signature_data"].(string)), &pojo)
+			var responseToCheck BlockIo.SignatureData
+			err := json.Unmarshal([]byte(responseBody["signature_data"].(string)), &responseToCheck)
 
-			var pojo2 BlockIo.SignatureData
-			err = json.Unmarshal([]byte(signAndFinalizeSweep["signature_data"].(string)), &pojo2)
+			var controlResponse BlockIo.SignatureData
+			err = json.Unmarshal([]byte(signAndFinalizeSweep["signature_data"].(string)), &controlResponse)
 			check := false
 
-			if pojo.ReferenceID != pojo2.ReferenceID {
+			if responseToCheck.ReferenceID != controlResponse.ReferenceID {
 				fmt.Println(1)
 				check = true
 			}
-			if len(pojo.Inputs) != len(pojo2.Inputs){
+			if len(responseToCheck.Inputs) != len(controlResponse.Inputs){
 				fmt.Println(2)
 				check = true
 			}
-			for i := 0; i < len(pojo.Inputs); i++ {
-				if pojo.Inputs[i].DataToSign != pojo2.Inputs[i].DataToSign || pojo.Inputs[i].InputNo != pojo2.Inputs[i].InputNo ||
-					pojo.Inputs[i].SignaturesNeeded != pojo2.Inputs[i].SignaturesNeeded {
+			for i := 0; i < len(responseToCheck.Inputs); i++ {
+				if responseToCheck.Inputs[i].DataToSign != controlResponse.Inputs[i].DataToSign || responseToCheck.Inputs[i].InputNo != controlResponse.Inputs[i].InputNo ||
+					responseToCheck.Inputs[i].SignaturesNeeded != controlResponse.Inputs[i].SignaturesNeeded {
 					fmt.Println(3)
 					check = true
 				}
-				for j := 0; j < len(pojo.Inputs[i].Signers); j++ {
-					if pojo.Inputs[i].Signers[j]!=pojo2.Inputs[i].Signers[j] {
-						fmt.Println(pojo.Inputs[i].Signers[j].SignedData,pojo2.Inputs[i].Signers[j].SignedData)
+				for j := 0; j < len(responseToCheck.Inputs[i].Signers); j++ {
+					if responseToCheck.Inputs[i].Signers[j]!= controlResponse.Inputs[i].Signers[j] {
+						fmt.Println(responseToCheck.Inputs[i].Signers[j].SignedData, controlResponse.Inputs[i].Signers[j].SignedData)
 						check = true
 					}
 				}
