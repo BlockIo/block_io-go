@@ -1,4 +1,4 @@
-package BlockIo
+package lib
 
 type SignatureData struct {
 	EncryptedPassphrase  EncryptedPassphrase `json:"encrypted_passphrase"`

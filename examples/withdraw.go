@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/BlockIo/block_io-go/lib"
-	"github.com/BlockIo/block_io-go/lib/BlockIo"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"
@@ -40,13 +39,13 @@ func WithdrawExample() {
 	if dataErr != nil {
 		panic(dataErr)
 	}
-	var SignatureRes BlockIo.SignatureData
+	var SignatureRes lib.SignatureData
 	err = json.Unmarshal(withdrawResDataString, &SignatureRes)
 	if err != nil {
 		panic(err)
 	}
 
-	if (SignatureRes.ReferenceID == "" || SignatureRes.EncryptedPassphrase == BlockIo.EncryptedPassphrase{} ||
+	if (SignatureRes.ReferenceID == "" || SignatureRes.EncryptedPassphrase == lib.EncryptedPassphrase{} ||
 		SignatureRes.EncryptedPassphrase.Passphrase == "") {
 		panic("invalid withdrawal response")
 	}
@@ -65,7 +64,7 @@ func WithdrawExample() {
 			SignatureRes.Inputs[i].Signers[j].SignedData = lib.SignInputs(privKey,SignatureRes.Inputs[i].DataToSign)
 		}
 	}
-	SignatureRes.EncryptedPassphrase = BlockIo.EncryptedPassphrase{}
+	SignatureRes.EncryptedPassphrase = lib.EncryptedPassphrase{}
 	signAndFinalizeReq, pojoErr := json.Marshal(SignatureRes)
 	if pojoErr != nil {
 		panic(pojoErr)
