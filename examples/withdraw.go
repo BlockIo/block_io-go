@@ -3,7 +3,7 @@ package examples
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/BlockIo/block_io-go/lib"
+	"github.com/BlockIo/block_io-go/sign_request"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"
@@ -16,7 +16,7 @@ func WithdrawExample() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	api_key := os.Getenv("API_KEY")
+	apiKey := os.Getenv("API_KEY")
 	pin := os.Getenv("PIN")
 
 	restClient := resty.New()
@@ -25,7 +25,7 @@ func WithdrawExample() {
 		SetBody(map[string]interface{}{
 		"to_address":os.Getenv("TO_ADDRESS"),
 		"amount": "0.001",
-	}).Post("https://block.io/api/v2/withdraw?api_key=" + api_key)
+	}).Post("https://block.io/api/v2/withdraw?api_key=" + apiKey)
 
 	if err != nil {
 		panic(err)
@@ -39,33 +39,10 @@ func WithdrawExample() {
 	if dataErr != nil {
 		panic(dataErr)
 	}
-	var SignatureRes lib.SignatureData
-	err = json.Unmarshal(withdrawResDataString, &SignatureRes)
-	if err != nil {
-		panic(err)
-	}
 
-	if (SignatureRes.ReferenceID == "" || SignatureRes.EncryptedPassphrase == lib.EncryptedPassphrase{} ||
-		SignatureRes.EncryptedPassphrase.Passphrase == "") {
-		panic("invalid withdrawal response")
-	}
-	var encryptedPassphrase = SignatureRes.EncryptedPassphrase.Passphrase
-	 aesKey := lib.PinToAesKey(pin)
+	signatureRes := sign_request.Withdraw(pin, withdrawResDataString)
 
-	privKey := lib.ExtractKeyFromEncryptedPassphrase(encryptedPassphrase,aesKey)
-	pubKey := lib.ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase,aesKey)
-
-	if pubKey != SignatureRes.EncryptedPassphrase.SignerPublicKey {
-		panic("Public key mismatch. Invalid Secret PIN detected.")
-	}
-
-	for i := 0; i < len(SignatureRes.Inputs); i++ {
-		for j := 0; j < len(SignatureRes.Inputs[i].Signers); j++ {
-			SignatureRes.Inputs[i].Signers[j].SignedData = lib.SignInputs(privKey,SignatureRes.Inputs[i].DataToSign)
-		}
-	}
-	SignatureRes.EncryptedPassphrase = lib.EncryptedPassphrase{}
-	signAndFinalizeReq, pojoErr := json.Marshal(SignatureRes)
+	signAndFinalizeReq, pojoErr := json.Marshal(signatureRes)
 	if pojoErr != nil {
 		panic(pojoErr)
 	}
@@ -75,7 +52,7 @@ func WithdrawExample() {
 		SetBody(map[string]interface{}{
 		"signature_data": string(signAndFinalizeReq),
 	}).
-		Post("https://block.io/api/v2/sign_and_finalize_withdrawal?api_key=" + api_key)
+		Post("https://block.io/api/v2/sign_and_finalize_withdrawal?api_key=" + apiKey)
 
 	fmt.Println(signAndFinalizeRes)
 }
