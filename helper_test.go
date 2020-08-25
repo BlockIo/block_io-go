@@ -1,8 +1,7 @@
-package test
+package main
 
 import (
 	"encoding/hex"
-	"github.com/BlockIo/block_io-go"
 	"testing"
 )
 
@@ -13,7 +12,7 @@ var controlCipherText string
 
 func HelperSetup() {
 	pin = "123456";
-	aesKey = main.PinToAesKey(pin);
+	aesKey = PinToAesKey(pin);
 	controlClearText = "I'm a little tea pot short and stout";
 	controlCipherText = "7HTfNBYJjq09+vi8hTQhy6lCp3IHv5rztNnKCJ5RB7cSL+NjHrFVv1jl7qkxJsOg";
 }
@@ -22,7 +21,7 @@ func TestSha256(t *testing.T) {
 	HelperSetup()
 	controlData := "5f78c33274e43fa9de5659265c1d917e25c03722dcb0b8d27db8d5feaa813953";
 	testData := "deadbeef";
-	shaData := hex.EncodeToString(main.SHA256_hash(main.HexStringToByteArray(testData)));
+	shaData := hex.EncodeToString(SHA256_hash(HexStringToByteArray(testData)));
 	if shaData != controlData {
 		t.Error("SHA256 not returning correct output")
 	}
@@ -36,14 +35,14 @@ func TestPinToAes(t *testing.T) {
 }
 
 func TestEncrypt(t *testing.T) {
-	encryptedData := main.Encrypt(controlClearText, aesKey);
+	encryptedData := Encrypt(controlClearText, aesKey);
 	if encryptedData != controlCipherText {
 		t.Error("Encrypt not returning correct output")
 	}
 }
 
 func TestDecrypt(t *testing.T) {
-	decryptedData := main.Decrypt(controlCipherText, aesKey);
+	decryptedData := Decrypt(controlCipherText, aesKey);
 	if decryptedData != controlClearText {
 		t.Error("Decrypt not returning correct output")
 	}
