@@ -1,4 +1,4 @@
-package lib
+package main
 
 type SignatureData struct {
 	EncryptedPassphrase  EncryptedPassphrase `json:"encrypted_passphrase"`

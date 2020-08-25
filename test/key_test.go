@@ -1,7 +1,7 @@
 package test
 
 import (
-	"github.com/BlockIo/block_io-go/lib"
+	"github.com/BlockIo/block_io-go"
 	"testing"
 )
 
@@ -32,12 +32,12 @@ func Setup() {
 	controlPubKeyFromWif = "024988bae7e0ade83cb1b6eb0fd81e6161f6657ad5dd91d216fbeab22aea3b61a0";
 	controlSignedDataWifKey = "3045022100aec97f7ad7a9831d583ca157284a68706a6ac4e76d6c9ee33adce6227a40e675022008894fb35020792c01443d399d33ffceb72ac1d410b6dcb9e31dcc71e6c49e92";
 	controlSignedDataPassphraseKey = "30450221009a68321e071c94e25484e26435639f00d23ef3fbe9c529c3347dc061f562530c0220134d3159098950b81b678f9e3b15e100f5478bb45345d3243df41ae616e70032";
-	privKeyFromWif, _ = lib.FromWIF(wif)
-	pubKeyFromWif = lib.PubKeyFromWIF(wif)
-	privKeyFromPassphrase = lib.ExtractKeyFromPassphrase(passphrase)
-	pubKeyFromPassphrase = lib.ExtractPubKeyFromPassphrase(passphrase)
-	signedDataWifKey = lib.SignInputs(privKeyFromWif, dataToSign)
-	signedDataPassphraseKey = lib.SignInputs(privKeyFromPassphrase, dataToSign)
+	privKeyFromWif, _ = main.FromWIF(wif)
+	pubKeyFromWif = main.PubKeyFromWIF(wif)
+	privKeyFromPassphrase = main.ExtractKeyFromPassphrase(passphrase)
+	pubKeyFromPassphrase = main.ExtractPubKeyFromPassphrase(passphrase)
+	signedDataWifKey = main.SignInputs(privKeyFromWif, dataToSign)
+	signedDataPassphraseKey = main.SignInputs(privKeyFromPassphrase, dataToSign)
 }
 
 func TestPrivKeyFromWif(t *testing.T) {

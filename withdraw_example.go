@@ -1,9 +1,8 @@
-package examples
+package main
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/BlockIo/block_io-go/sign_request"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"
@@ -40,7 +39,7 @@ func WithdrawExample() {
 		panic(dataErr)
 	}
 
-	signatureRes := sign_request.Withdraw(pin, withdrawResDataString)
+	signatureRes := SignWithdrawRequest(pin, withdrawResDataString)
 
 	signAndFinalizeReq, pojoErr := json.Marshal(signatureRes)
 	if pojoErr != nil {
