@@ -53,7 +53,3 @@ func SignSweepRequest(privKey string, sweepReqString []byte) SignatureData{
 	keyFromWif, _ := FromWIF(privKey)
 	return signRequest(keyFromWif, sweepReqString, "sweep")
 }
-
-func GetPublicKey(privKey string) string{
-	return PubKeyFromWIF(privKey)
-}

@@ -73,17 +73,13 @@ func PinToAesKey(pin string) string {
 	}
 	pinBytes := []byte(pin)
 
-	firstHash := ByteArrayToHexString(pbkdf2.Key(pinBytes, saltOld, 1024, 16, sha256.New))
+	firstHash := hex.EncodeToString(pbkdf2.Key(pinBytes, saltOld, 1024, 16, sha256.New))
 
 	firstHashBytes := []byte(firstHash)
 
 	key := pbkdf2.Key(firstHashBytes, saltOld, 1024, 32, sha256.New)
 
 	return base64.StdEncoding.EncodeToString(key)
-}
-
-func ByteArrayToHexString(ba []byte) string {
-	return hex.EncodeToString(ba)
 }
 
 func SHA256_hash(ba []byte) []byte {

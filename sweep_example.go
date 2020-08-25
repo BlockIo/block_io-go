@@ -25,7 +25,7 @@ func SweepExample() {
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
 			"to_address": toAddr,
-			"public_key": GetPublicKey(privKey),
+			"public_key": PubKeyFromWIF(privKey),
 			"from_address": fromAddr,
 		}).Post("https://block.io/api/v2/sweep_from_address?api_key=" + apiKey)
 
