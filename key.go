@@ -1,4 +1,4 @@
-package main
+package blockIO
 
 import (
 	"crypto/sha256"

@@ -1,15 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	blockIO "github.com/BlockIo/block_io-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
 
-func WithdrawExample() {
+func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -29,27 +29,26 @@ func WithdrawExample() {
 	if err != nil {
 		panic(err)
 	}
-	var withdrawResMap map[string]interface{}
-	marshalErr := json.Unmarshal([]byte(rawWithdrawResponse.String()), &withdrawResMap)
-	if marshalErr != nil {
-		panic(marshalErr)
-	}
-	withdrawResDataString, dataErr := json.Marshal(withdrawResMap["data"])
-	if dataErr != nil {
-		panic(dataErr)
+
+	fmt.Println("Raw withdraw response: ")
+	fmt.Println(rawWithdrawResponse)
+
+	withdrawData, withdrawDataErr := blockIO.ParseResponseData(rawWithdrawResponse)
+
+	if withdrawDataErr != nil {
+		panic(withdrawDataErr)
 	}
 
-	signatureRes := SignWithdrawRequest(pin, withdrawResDataString)
+	signatureReq, signWithdrawReqErr := blockIO.SignWithdrawRequest(pin, withdrawData)
 
-	signAndFinalizeReq, pojoErr := json.Marshal(signatureRes)
-	if pojoErr != nil {
-		panic(pojoErr)
+	if signWithdrawReqErr != nil {
+		panic(signWithdrawReqErr)
 	}
 
 	signAndFinalizeRes, err := restClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
-		"signature_data": string(signAndFinalizeReq),
+		"signature_data": signatureReq,
 	}).
 		Post("https://block.io/api/v2/sign_and_finalize_withdrawal?api_key=" + apiKey)
 

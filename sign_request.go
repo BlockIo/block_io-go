@@ -1,55 +1,57 @@
-package main
+package blockIO
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
-func signRequest(key string, reqString []byte, requestType string) SignatureData {
+func signRequest(key string, reqData SignatureData, requestType string) SignatureData {
 
-	var signatureRes SignatureData
-	err := json.Unmarshal(reqString, &signatureRes)
-	if err != nil {
-		panic(err)
-	}
-
-	if signatureRes.ReferenceID == "" {
+	if reqData.ReferenceID == "" {
 		panic("invalid " + requestType + " response")
 	}
 
 	switch requestType {
 	case "withdraw":
-		if (signatureRes.EncryptedPassphrase == EncryptedPassphrase{} ||
-			signatureRes.EncryptedPassphrase.Passphrase == "") {
+		if (reqData.EncryptedPassphrase == EncryptedPassphrase{} ||
+			reqData.EncryptedPassphrase.Passphrase == "") {
 			panic("invalid withdrawal response")
 		}
-		var encryptedPassphrase = signatureRes.EncryptedPassphrase.Passphrase
+		var encryptedPassphrase = reqData.EncryptedPassphrase.Passphrase
 
 		privKey := ExtractKeyFromEncryptedPassphrase(encryptedPassphrase, key)
 		pubKey := ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase, key)
 
-		if pubKey != signatureRes.EncryptedPassphrase.SignerPublicKey {
+		if pubKey != reqData.EncryptedPassphrase.SignerPublicKey {
 			panic("Public key mismatch. Invalid Secret PIN detected.")
 		}
 		key = privKey
 	}
 
-	for i := 0; i < len(signatureRes.Inputs); i++ {
-		for j := 0; j < len(signatureRes.Inputs[i].Signers); j++ {
-			signatureRes.Inputs[i].Signers[j].SignedData = SignInputs(key, signatureRes.Inputs[i].DataToSign)
+	for i := 0; i < len(reqData.Inputs); i++ {
+		for j := 0; j < len(reqData.Inputs[i].Signers); j++ {
+			reqData.Inputs[i].Signers[j].SignedData = SignInputs(key, reqData.Inputs[i].DataToSign)
 		}
 	}
-	signatureRes.EncryptedPassphrase = EncryptedPassphrase{}
+	reqData.EncryptedPassphrase = EncryptedPassphrase{}
 
-	return signatureRes
+	return reqData
 }
 
-func SignWithdrawRequest(pin string, withdrawReqString []byte) SignatureData{
+func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error) {
 
 	aesKey := PinToAesKey(pin)
-	return signRequest(aesKey, withdrawReqString, "withdraw")
+	signedWithdrawReqData := signRequest(aesKey, withdrawData, "withdraw")
+	signAndFinalizeReq, err := json.Marshal(signedWithdrawReqData)
+	if err != nil {
+		return "", err
+	}
+	return string(signAndFinalizeReq), nil
 }
 
-func SignSweepRequest(privKey string, sweepReqString []byte) SignatureData{
+func SignSweepRequest(privKey string, sweepReqData SignatureData) (string, error) {
 	keyFromWif, _ := FromWIF(privKey)
-	return signRequest(keyFromWif, sweepReqString, "sweep")
+	signedSweepReqData := signRequest(keyFromWif, sweepReqData, "sweep")
+	signAndFinalizeReq, err := json.Marshal(signedSweepReqData)
+	if err != nil {
+		return "", err
+	}
+	return string(signAndFinalizeReq), nil
 }

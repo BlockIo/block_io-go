@@ -1,4 +1,4 @@
-package main
+package blockIO
 
 import (
 	"bytes"
@@ -7,9 +7,11 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/btcsuite/btcd/btcec"
+	"github.com/go-resty/resty/v2"
 	"github.com/piotrnar/gocoin/lib/btc"
 	"golang.org/x/crypto/pbkdf2"
 	"golang.org/x/exp/utf8string"
@@ -34,6 +36,15 @@ func SignInputs(PrivKey string, DataToSign string) string {
 		return ""
 	}
 	return hex.EncodeToString(signature.Serialize())
+}
+
+func ParseResponseData(res *resty.Response) (SignatureData, error){
+	var withdrawRes SignatureRes
+	marshalErr := json.Unmarshal([]byte(res.String()), &withdrawRes)
+	if marshalErr != nil {
+		return SignatureData{}, marshalErr
+	}
+	return withdrawRes.Data, nil
 }
 
 func ExtractKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {

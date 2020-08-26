@@ -1,15 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	blockIO "github.com/BlockIo/block_io-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
 )
 
-func SweepExample() {
+func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
@@ -24,35 +24,34 @@ func SweepExample() {
 	rawSweepResponse, err := restClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
-			"to_address": toAddr,
-			"public_key": PubKeyFromWIF(privKey),
+			"to_address":   toAddr,
+			"public_key":   blockIO.PubKeyFromWIF(privKey),
 			"from_address": fromAddr,
 		}).Post("https://block.io/api/v2/sweep_from_address?api_key=" + apiKey)
 
 	if err != nil {
 		panic(err)
 	}
-	var sweepResMap map[string]interface{}
-	marshalErr := json.Unmarshal([]byte(rawSweepResponse.String()), &sweepResMap)
-	if marshalErr != nil {
-		panic(marshalErr)
-	}
-	sweepResDataString, dataErr := json.Marshal(sweepResMap["data"])
-	if dataErr != nil {
-		panic(dataErr)
+
+	fmt.Println("Raw sweep response: ")
+	fmt.Println(rawSweepResponse)
+
+	sweepData, sweepDataErr := blockIO.ParseResponseData(rawSweepResponse)
+
+	if sweepDataErr != nil {
+		panic(sweepDataErr)
 	}
 
-	signatureRes := SignSweepRequest(privKey, sweepResDataString)
+	signatureReq, signSweepReqErr := blockIO.SignSweepRequest(privKey, sweepData)
 
-	signAndFinalizeReq, pojoErr := json.Marshal(signatureRes)
-	if pojoErr != nil {
-		panic(pojoErr)
+	if signSweepReqErr != nil {
+		panic(signSweepReqErr)
 	}
 
 	signAndFinalizeRes, err := restClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
-			"signature_data": string(signAndFinalizeReq),
+			"signature_data": signatureReq,
 		}).
 		Post("https://block.io/api/v2/sign_and_finalize_sweep?api_key=" + apiKey)
 

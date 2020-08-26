@@ -1,4 +1,9 @@
-package main
+package blockIO
+
+type SignatureRes struct {
+	Status 	string 		  `json:"status"`
+	Data 	SignatureData `json:"data"`
+}
 
 type SignatureData struct {
 	EncryptedPassphrase  EncryptedPassphrase `json:"encrypted_passphrase"`
