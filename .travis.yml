@@ -4,5 +4,5 @@ go:
 env:
   - GO111MODULE=on
 script:
-  - go get -v
+  - go build .
   - go test -v
