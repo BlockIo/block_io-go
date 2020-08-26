@@ -43,8 +43,9 @@ func TestEncrypt(t *testing.T) {
 }
 
 func TestDecrypt(t *testing.T) {
-	decryptedData := Decrypt(controlCipherText, aesKey);
-	if decryptedData != controlClearText {
+	decryptedData := Decrypt(controlCipherText, aesKey)
+	string := string(decryptedData)
+	if string != controlClearText {
 		t.Error("Decrypt not returning correct output")
 	}
 }

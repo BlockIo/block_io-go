@@ -45,7 +45,7 @@ func ParseResponseData(res *resty.Response) (SignatureData, error){
 
 func ExtractKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {
 	Decrypted := Decrypt(EncryptedData,B64Key)
-	Unhexlified, err := hex.DecodeString(Decrypted)
+	Unhexlified, err := hex.DecodeString(string(Decrypted))
 
 	if err != nil {
 		log.Fatal(errors.New("Unhexlified Error"))
@@ -58,7 +58,7 @@ func ExtractKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) stri
 
 func ExtractPubKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {
 	Decrypted := Decrypt(EncryptedData,B64Key)
-	Unhexlified, err := hex.DecodeString(Decrypted)
+	Unhexlified, err := hex.DecodeString(string(Decrypted))
 
 	if err != nil {
 		log.Fatal(errors.New("Unhexlified Error"))
