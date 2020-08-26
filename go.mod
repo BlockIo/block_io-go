@@ -1,4 +1,4 @@
-module github.com/BlockIo/block_io-go
+module github.com/BlockIo/block_io-go/blockIO
 
 go 1.12
 
