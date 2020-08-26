@@ -21,7 +21,8 @@ func TestSha256(t *testing.T) {
 	HelperSetup()
 	controlData := "5f78c33274e43fa9de5659265c1d917e25c03722dcb0b8d27db8d5feaa813953";
 	testData := "deadbeef";
-	shaData := hex.EncodeToString(SHA256_hash(HexStringToByteArray(testData)));
+	bytes, _ := hex.DecodeString(testData);
+	shaData := hex.EncodeToString(SHA256_hash(bytes));
 	if shaData != controlData {
 		t.Error("SHA256 not returning correct output")
 	}

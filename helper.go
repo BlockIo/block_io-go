@@ -98,14 +98,6 @@ func SHA256_hash(ba []byte) []byte {
 	return sha[:]
 }
 
-func HexStringToByteArray(hexString string) []byte {
-	hexed, err := hex.DecodeString(hexString)
-	if err != nil {
-		return nil
-	}
-	return hexed
-}
-
 type ecb struct {
 	b         cipher.Block
 	blockSize int
