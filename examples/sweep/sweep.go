@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/BlockIo/block_io-go/blockIO"
+	blockio "github.com/BlockIo/block_io-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"
@@ -25,7 +25,7 @@ func main() {
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
 			"to_address":   toAddr,
-			"public_key":   blockIO.PubKeyFromWIF(privKey),
+			"public_key":   blockio.PubKeyFromWIF(privKey),
 			"from_address": fromAddr,
 		}).Post("https://block.io/api/v2/sweep_from_address?api_key=" + apiKey)
 
@@ -36,13 +36,13 @@ func main() {
 	fmt.Println("Raw sweep response: ")
 	fmt.Println(rawSweepResponse)
 
-	sweepData, sweepDataErr := blockIO.ParseResponseData(rawSweepResponse)
+	sweepData, sweepDataErr := blockio.ParseResponseData(rawSweepResponse)
 
 	if sweepDataErr != nil {
 		panic(sweepDataErr)
 	}
 
-	signatureReq, signSweepReqErr := blockIO.SignSweepRequest(privKey, sweepData)
+	signatureReq, signSweepReqErr := blockio.SignSweepRequest(privKey, sweepData)
 
 	if signSweepReqErr != nil {
 		panic(signSweepReqErr)

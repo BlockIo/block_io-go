@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/BlockIo/block_io-go/blockIO"
+	blockio "github.com/BlockIo/block_io-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"
@@ -33,13 +33,13 @@ func main() {
 	fmt.Println("Raw withdraw response: ")
 	fmt.Println(rawWithdrawResponse)
 
-	withdrawData, withdrawDataErr := blockIO.ParseResponseData(rawWithdrawResponse)
+	withdrawData, withdrawDataErr := blockio.ParseResponseData(rawWithdrawResponse)
 
 	if withdrawDataErr != nil {
 		panic(withdrawDataErr)
 	}
 
-	signatureReq, signWithdrawReqErr := blockIO.SignWithdrawRequest(pin, withdrawData)
+	signatureReq, signWithdrawReqErr := blockio.SignWithdrawRequest(pin, withdrawData)
 
 	if signWithdrawReqErr != nil {
 		panic(signWithdrawReqErr)
