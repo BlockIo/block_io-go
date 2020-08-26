@@ -27,7 +27,7 @@ func main() {
 	}).Post("https://block.io/api/v2/withdraw?api_key=" + apiKey)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println("Raw withdraw response: ")
@@ -36,13 +36,13 @@ func main() {
 	withdrawData, withdrawDataErr := blockio.ParseResponseData(rawWithdrawResponse)
 
 	if withdrawDataErr != nil {
-		panic(withdrawDataErr)
+		log.Fatal(withdrawDataErr)
 	}
 
 	signatureReq, signWithdrawReqErr := blockio.SignWithdrawRequest(pin, withdrawData)
 
 	if signWithdrawReqErr != nil {
-		panic(signWithdrawReqErr)
+		log.Fatal(signWithdrawReqErr)
 	}
 
 	signAndFinalizeRes, err := restClient.R().

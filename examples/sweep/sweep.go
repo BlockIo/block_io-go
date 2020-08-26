@@ -30,7 +30,7 @@ func main() {
 		}).Post("https://block.io/api/v2/sweep_from_address?api_key=" + apiKey)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println("Raw sweep response: ")
@@ -39,13 +39,13 @@ func main() {
 	sweepData, sweepDataErr := blockio.ParseResponseData(rawSweepResponse)
 
 	if sweepDataErr != nil {
-		panic(sweepDataErr)
+		log.Fatal(sweepDataErr)
 	}
 
 	signatureReq, signSweepReqErr := blockio.SignSweepRequest(privKey, sweepData)
 
 	if signSweepReqErr != nil {
-		panic(signSweepReqErr)
+		log.Fatal(signSweepReqErr)
 	}
 
 	signAndFinalizeRes, err := restClient.R().
