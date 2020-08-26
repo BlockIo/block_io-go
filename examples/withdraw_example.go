@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	blockIO "github.com/BlockIo/block_io-go"
+	"github.com/BlockIo/block_io-go/blockIO"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
 	"log"

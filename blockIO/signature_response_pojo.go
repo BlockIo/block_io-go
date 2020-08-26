@@ -1,8 +1,8 @@
 package blockIO
 
 type SignatureRes struct {
-	Status 	string 		  `json:"status"`
-	Data 	SignatureData `json:"data"`
+	Status string        `json:"status"`
+	Data   SignatureData `json:"data"`
 }
 
 type SignatureData struct {
