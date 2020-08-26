@@ -1,7 +1,8 @@
 language: go
 go:
   - 1.12.x
+env:
+  - GO111MODULE=on
 script:
-  - cd blockIO/
-  - env GO111MODULE=on go get -v
-  - env GO111MODULE=on go test -v
+  - go get -v
+  - go test -v
