@@ -1,29 +1,11 @@
 package blockIO
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"errors"
+)
 
-func signRequest(key string, reqData SignatureData, requestType string) SignatureData {
-
-	if reqData.ReferenceID == "" {
-		panic("invalid " + requestType + " response")
-	}
-
-	switch requestType {
-	case "withdraw":
-		if (reqData.EncryptedPassphrase == EncryptedPassphrase{} ||
-			reqData.EncryptedPassphrase.Passphrase == "") {
-			panic("invalid withdrawal response")
-		}
-		var encryptedPassphrase = reqData.EncryptedPassphrase.Passphrase
-
-		privKey := ExtractKeyFromEncryptedPassphrase(encryptedPassphrase, key)
-		pubKey := ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase, key)
-
-		if pubKey != reqData.EncryptedPassphrase.SignerPublicKey {
-			panic("Public key mismatch. Invalid Secret PIN detected.")
-		}
-		key = privKey
-	}
+func signRequest(key string, reqData SignatureData) SignatureData {
 
 	for i := 0; i < len(reqData.Inputs); i++ {
 		for j := 0; j < len(reqData.Inputs[i].Signers); j++ {
@@ -37,8 +19,23 @@ func signRequest(key string, reqData SignatureData, requestType string) Signatur
 
 func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error) {
 
+	if (withdrawData.ReferenceID == "" || withdrawData.EncryptedPassphrase == EncryptedPassphrase{} ||
+		withdrawData.EncryptedPassphrase.Passphrase == "") {
+		return "", errors.New("invalid withdraw response")
+	}
+
 	aesKey := PinToAesKey(pin)
-	signedWithdrawReqData := signRequest(aesKey, withdrawData, "withdraw")
+
+	var encryptedPassphrase = withdrawData.EncryptedPassphrase.Passphrase
+	privKey := ExtractKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
+	pubKey := ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
+
+	if pubKey != withdrawData.EncryptedPassphrase.SignerPublicKey {
+		return "", errors.New("Public key mismatch. Invalid Secret PIN detected.")
+	}
+
+	signedWithdrawReqData := signRequest(privKey, withdrawData)
+	
 	signAndFinalizeReq, err := json.Marshal(signedWithdrawReqData)
 	if err != nil {
 		return "", err
@@ -47,8 +44,11 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 }
 
 func SignSweepRequest(privKey string, sweepReqData SignatureData) (string, error) {
+	if sweepReqData.ReferenceID == "" {
+		return "", errors.New("invalid sweep response")
+	}
 	keyFromWif, _ := FromWIF(privKey)
-	signedSweepReqData := signRequest(keyFromWif, sweepReqData, "sweep")
+	signedSweepReqData := signRequest(keyFromWif, sweepReqData)
 	signAndFinalizeReq, err := json.Marshal(signedSweepReqData)
 	if err != nil {
 		return "", err
