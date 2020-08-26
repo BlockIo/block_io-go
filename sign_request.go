@@ -35,7 +35,7 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 	}
 
 	signedWithdrawReqData := signRequest(privKey, withdrawData)
-	
+
 	signAndFinalizeReq, err := json.Marshal(signedWithdrawReqData)
 	if err != nil {
 		return "", err

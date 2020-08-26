@@ -49,8 +49,7 @@ func main() {
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
 		"signature_data": signatureReq,
-	}).
-		Post("https://block.io/api/v2/sign_and_finalize_withdrawal?api_key=" + apiKey)
+	}).Post("https://block.io/api/v2/sign_and_finalize_withdrawal?api_key=" + apiKey)
 
 	fmt.Println(signAndFinalizeRes)
 }
