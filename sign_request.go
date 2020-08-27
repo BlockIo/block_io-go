@@ -55,12 +55,12 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 	return string(signAndFinalizeReq), nil
 }
 
-func SignSweepRequest(privKey string, sweepReqData SignatureData) (string, error) {
+func SignSweepRequest(eckey *ECKey, sweepReqData SignatureData) (string, error) {
 	if sweepReqData.ReferenceID == "" {
 		return "", errors.New("invalid sweep response")
 	}
-	keyFromWif, _ := FromWIF(privKey)
-	signedSweepReqData := signRequest(keyFromWif, sweepReqData)
+
+	signedSweepReqData := signRequest(eckey, sweepReqData)
 	signAndFinalizeReq, err := json.Marshal(signedSweepReqData)
 	if err != nil {
 		return "", err
