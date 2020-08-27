@@ -30,7 +30,7 @@ func main() {
 	fmt.Println("Raw withdraw response: ")
 	fmt.Println(rawWithdrawResponse)
 
-	withdrawData, withdrawDataErr := blockio.ParseResponseData(rawWithdrawResponse.String())
+	withdrawData, withdrawDataErr := blockio.ParseSignatureResponse(rawWithdrawResponse.String())
 
 	if withdrawDataErr != nil {
 		log.Fatal(withdrawDataErr)

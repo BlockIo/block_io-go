@@ -67,3 +67,19 @@ func SignSweepRequest(eckey *ECKey, sweepReqData SignatureData) (string, error) 
 	}
 	return string(signAndFinalizeReq), nil
 }
+
+func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData SignatureData) (string, error) {
+
+	for i := 0; i < len(dtrustReqData.Inputs); i++ {
+		for j := 0; j < len(dtrustReqData.Inputs[i].Signers); j++ {
+			//TODO handle my errors
+			dtrustReqData.Inputs[i].Signers[j].SignedData, _ = SignInputs(ecKeys[j], dtrustReqData.Inputs[i].DataToSign)
+		}
+	}
+
+	signAndFinalizeReq, err := json.Marshal(dtrustReqData)
+	if err != nil {
+		return "", err
+	}
+	return string(signAndFinalizeReq), nil
+}

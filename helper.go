@@ -8,7 +8,16 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-func ParseResponseData(res string) (SignatureData, error){
+func ParseResponse(res string) (BaseResponse, error){
+	var resStruct BaseResponse
+	marshalErr := json.Unmarshal([]byte(res), &resStruct)
+	if marshalErr != nil {
+		return BaseResponse{}, marshalErr
+	}
+	return resStruct, nil
+}
+
+func ParseSignatureResponse(res string) (SignatureData, error){
 	var withdrawRes SignatureRes
 	marshalErr := json.Unmarshal([]byte(res), &withdrawRes)
 	if marshalErr != nil {

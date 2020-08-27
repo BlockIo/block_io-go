@@ -40,7 +40,7 @@ func main() {
 	fmt.Println("Raw sweep response: ")
 	fmt.Println(rawSweepResponse)
 
-	sweepData, sweepDataErr := blockio.ParseResponseData(rawSweepResponse.String())
+	sweepData, sweepDataErr := blockio.ParseSignatureResponse(rawSweepResponse.String())
 
 	if sweepDataErr != nil {
 		log.Fatal(sweepDataErr)
