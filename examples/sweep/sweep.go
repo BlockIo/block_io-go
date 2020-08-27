@@ -10,42 +10,46 @@ import (
 )
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+	godotenv.Load(".env")
 
 	apiKey := os.Getenv("API_KEY")
 	toAddr := os.Getenv("TO_ADDRESS")
-	privKey := os.Getenv("PRIVATE_KEY_FROM_ADDRESS")
-	fromAddr := os.Getenv("FROM_ADDRESS")
+	strWif := os.Getenv("WIF_TO_SWEEP")
+
+	if (apiKey == "" || toAddr == "" || strWif == "") {
+		log.Fatal("Sweep requires environment variables API_KEY, TO_ADDRESS and WIF_TO_SWEEP")
+	}
+
+	ecKey, wifErr := blockio.FromWIF(strWif)
+	if wifErr != nil {
+		log.Fatal(wifErr)
+	}
 
 	restClient := resty.New()
 	rawSweepResponse, err := restClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
 			"to_address":   toAddr,
-			"public_key":   blockio.PubKeyFromWIF(privKey),
-			"from_address": fromAddr,
+			"public_key":   ecKey.PublicKeyHex(),
 		}).Post("https://block.io/api/v2/sweep_from_address?api_key=" + apiKey)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println("Raw sweep response: ")
 	fmt.Println(rawSweepResponse)
 
-	sweepData, sweepDataErr := blockio.ParseResponseData(rawSweepResponse)
+	sweepData, sweepDataErr := blockio.ParseResponseData(rawSweepResponse.String())
 
 	if sweepDataErr != nil {
-		panic(sweepDataErr)
+		log.Fatal(sweepDataErr)
 	}
 
-	signatureReq, signSweepReqErr := blockio.SignSweepRequest(privKey, sweepData)
+	signatureReq, signSweepReqErr := blockio.SignSweepRequest(ecKey, sweepData)
 
 	if signSweepReqErr != nil {
-		panic(signSweepReqErr)
+		log.Fatal(signSweepReqErr)
 	}
 
 	signAndFinalizeRes, err := restClient.R().

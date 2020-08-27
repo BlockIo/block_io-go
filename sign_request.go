@@ -2,14 +2,21 @@ package block_io_go
 
 import (
 	"encoding/json"
+	"encoding/hex"
 	"errors"
 )
 
-func signRequest(key string, reqData SignatureData) SignatureData {
+func SignInputs(ecKey *ECKey, DataToSign string) (string, error) {
+	messageHash, _ := hex.DecodeString(DataToSign)
+	return ecKey.SignHex(messageHash)
+}
+
+func signRequest(ecKey *ECKey, reqData SignatureData) SignatureData {
 
 	for i := 0; i < len(reqData.Inputs); i++ {
 		for j := 0; j < len(reqData.Inputs[i].Signers); j++ {
-			reqData.Inputs[i].Signers[j].SignedData = SignInputs(key, reqData.Inputs[i].DataToSign)
+			//TODO handle my errors
+			reqData.Inputs[i].Signers[j].SignedData, _ = SignInputs(ecKey, reqData.Inputs[i].DataToSign)
 		}
 	}
 	reqData.EncryptedPassphrase = EncryptedPassphrase{}
@@ -27,28 +34,33 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 	aesKey := PinToAesKey(pin)
 
 	var encryptedPassphrase = withdrawData.EncryptedPassphrase.Passphrase
-	privKey := ExtractKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
-	pubKey := ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
-
-	if pubKey != withdrawData.EncryptedPassphrase.SignerPublicKey {
-		return "", errors.New("Public key mismatch. Invalid Secret PIN detected.")
+	ecKey, err := ExtractKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
+	if (err != nil) {
+		return "", err
 	}
 
-	signedWithdrawReqData := signRequest(privKey, withdrawData)
+	pubKeyHex := ecKey.PublicKeyHex()
+
+	if pubKeyHex != withdrawData.EncryptedPassphrase.SignerPublicKey {
+		return "", errors.New("Public key mismatch")
+	}
+
+	signedWithdrawReqData := signRequest(ecKey, withdrawData)
 
 	signAndFinalizeReq, err := json.Marshal(signedWithdrawReqData)
 	if err != nil {
 		return "", err
 	}
+
 	return string(signAndFinalizeReq), nil
 }
 
-func SignSweepRequest(privKey string, sweepReqData SignatureData) (string, error) {
+func SignSweepRequest(eckey *ECKey, sweepReqData SignatureData) (string, error) {
 	if sweepReqData.ReferenceID == "" {
 		return "", errors.New("invalid sweep response")
 	}
-	keyFromWif, _ := FromWIF(privKey)
-	signedSweepReqData := signRequest(keyFromWif, sweepReqData)
+
+	signedSweepReqData := signRequest(eckey, sweepReqData)
 	signAndFinalizeReq, err := json.Marshal(signedSweepReqData)
 	if err != nil {
 		return "", err

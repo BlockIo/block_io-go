@@ -10,10 +10,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+	godotenv.Load(".env")
 
 	apiKey := os.Getenv("API_KEY")
 	pin := os.Getenv("PIN")
@@ -27,22 +24,22 @@ func main() {
 	}).Post("https://block.io/api/v2/withdraw?api_key=" + apiKey)
 
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println("Raw withdraw response: ")
 	fmt.Println(rawWithdrawResponse)
 
-	withdrawData, withdrawDataErr := blockio.ParseResponseData(rawWithdrawResponse)
+	withdrawData, withdrawDataErr := blockio.ParseResponseData(rawWithdrawResponse.String())
 
 	if withdrawDataErr != nil {
-		panic(withdrawDataErr)
+		log.Fatal(withdrawDataErr)
 	}
 
 	signatureReq, signWithdrawReqErr := blockio.SignWithdrawRequest(pin, withdrawData)
 
 	if signWithdrawReqErr != nil {
-		panic(signWithdrawReqErr)
+		log.Fatal(signWithdrawReqErr)
 	}
 
 	signAndFinalizeRes, err := restClient.R().
