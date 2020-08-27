@@ -2,46 +2,32 @@
 
 # BlockIo
 
-This Golang library is the official reference client for the Block.io payments API and uses go modules. To use this, you will need the Dogecoin, Bitcoin, or Litecoin API key(s) from <a href="https://block.io" target="_blank">Block.io</a>. Go ahead, sign up :)
+This Golang library is the official Block.IO SDK. To call the API, you will need the Dogecoin, Bitcoin, or Litecoin API key(s) from <a href="https://block.io" target="_blank">Block.io</a>. Go ahead, sign up :)
 
 ## Installation
 
-1. Clone the repo
-2. go get -v ./lib
+    go get github.com/BlockIo/block_io-go
 
 ## Usage
 
 It's super easy to get started. In your code, do this:
 
-    var blockIo BlockIo.Client
-    blockIo.Instantiate(apiKey, pin, version, BlockIo.Options{})
+    import blockio "github.com/BlockIo/block_io-go"
 
-    // print the account balance request's response
-    res, err := blockIo.GetBalance(map[string]interface{}{})
+    // Withdraw json response signing
 
-    // print the response of a withdrawal request
-    // 'SECRET_PIN' is only required if you did not specify it at 
-    // class initialization time.
-    res, _ := blockIo.Withdraw(map[string]interface{}{
-		"from_labels": "default",
-		"to_label": "testDest15",
-		"amount":"2.5",
-        "pin":pin,
-	})  
+    withdrawData, _ := blockio.ParseResponseData(rawWithdrawResponse.String())
+	signatureReq, _ := blockio.SignWithdrawRequest(pin, withdrawData)
+
+    // Sweep json response signing
+
+    ecKey, _ := blockio.FromWIF(strWif)
+    sweepData, _ := blockio.ParseResponseData(rawSweepResponse.String())
+	signatureReq, _ := blockio.SignSweepRequest(ecKey, sweepData)
 
 ##### For a more detailed guide on usage, check the examples folder in the repo 
 
-##### A note on passing json args to requests:
-
-Args are passed as map[string]interface{} 
-
-    map[string]interface{}{ "param": "val", "array": "val1, val2" }
-
 ## Testing
 
-**DO NOT USE PRODUCTION CREDENTIALS FOR UNIT TESTING!** 
-
-Test syntax:
-
 ```bash
-go test -v ./test
+go test -v
