@@ -5,11 +5,12 @@ import (
 	"errors"
 )
 
-func signRequest(key string, reqData SignatureData) SignatureData {
+func signRequest(ecKey *ECKey, reqData SignatureData) SignatureData {
 
 	for i := 0; i < len(reqData.Inputs); i++ {
 		for j := 0; j < len(reqData.Inputs[i].Signers); j++ {
-			reqData.Inputs[i].Signers[j].SignedData = SignInputs(key, reqData.Inputs[i].DataToSign)
+			//TODO handle my errors
+			reqData.Inputs[i].Signers[j].SignedData, _ = SignInputs(ecKey, reqData.Inputs[i].DataToSign)
 		}
 	}
 	reqData.EncryptedPassphrase = EncryptedPassphrase{}
@@ -27,19 +28,24 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 	aesKey := PinToAesKey(pin)
 
 	var encryptedPassphrase = withdrawData.EncryptedPassphrase.Passphrase
-	privKey := ExtractKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
-	pubKey := ExtractPubKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
-
-	if pubKey != withdrawData.EncryptedPassphrase.SignerPublicKey {
-		return "", errors.New("Public key mismatch. Invalid Secret PIN detected.")
+	ecKey, err := ExtractKeyFromEncryptedPassphrase(encryptedPassphrase, aesKey)
+	if (err != nil) {
+		return "", err
 	}
 
-	signedWithdrawReqData := signRequest(privKey, withdrawData)
+	pubKeyHex := ecKey.PublicKeyHex()
+
+	if pubKeyHex != withdrawData.EncryptedPassphrase.SignerPublicKey {
+		return "", errors.New("Public key mismatch")
+	}
+
+	signedWithdrawReqData := signRequest(ecKey, withdrawData)
 
 	signAndFinalizeReq, err := json.Marshal(signedWithdrawReqData)
 	if err != nil {
 		return "", err
 	}
+
 	return string(signAndFinalizeReq), nil
 }
 

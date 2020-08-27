@@ -6,32 +6,19 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/btcsuite/btcd/btcec"
 	"github.com/go-resty/resty/v2"
 	"github.com/piotrnar/gocoin/lib/btc"
 	"golang.org/x/crypto/pbkdf2"
 	"log"
 )
 
-func SignInputs(PrivKey string, DataToSign string) string {
-	// Decode a hex-encoded private key.
-	pkBytes, err := hex.DecodeString(PrivKey)
+func SignInputs(ecKey *ECKey, DataToSign string) (string, error) {
+	messageHash, _ := hex.DecodeString(DataToSign)
+	signature, err := ecKey.Sign(messageHash)
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return "", err
 	}
-	privKey, pubKey := btcec.PrivKeyFromBytes(btcec.S256(), pkBytes)
-	pubKey = pubKey
-	// Sign a message using the private key.
-	message := DataToSign
-	messageHash, _ := hex.DecodeString(message)
-	signature, err := privKey.Sign(messageHash)
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-	return hex.EncodeToString(signature.Serialize())
+	return hex.EncodeToString(signature), nil
 }
 
 func ParseResponseData(res *resty.Response) (SignatureData, error){
@@ -43,19 +30,33 @@ func ParseResponseData(res *resty.Response) (SignatureData, error){
 	return withdrawRes.Data, nil
 }
 
-func ExtractKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {
-	Decrypted := Decrypt(EncryptedData,B64Key)
-	Unhexlified, err := hex.DecodeString(string(Decrypted))
-
-	if err != nil {
-		log.Fatal(errors.New("Unhexlified Error"))
+func ExtractKeyFromEncryptedPassphrase(encryptedData string, b64Key string) (*ECKey, error) {
+	aesKey, b64keyErr := base64.StdEncoding.DecodeString(b64Key)
+	if (b64keyErr != nil) {
+		return nil, b64keyErr
 	}
 
-	Hashed := sha256.Sum256(Unhexlified)
-	UsableHashed := Hashed[:]
-	return hex.EncodeToString(UsableHashed)
+	cipherText, b64CtErr := base64.StdEncoding.DecodeString(encryptedData)
+	if (b64CtErr != nil) {
+		return nil, b64CtErr
+	}
+
+	clearText, decryptErr := AESDecrypt(cipherText, aesKey)
+	if (decryptErr != nil) {
+		return nil, decryptErr
+	}
+
+	seed, hexSeedErr := hex.DecodeString(string(clearText))
+	if hexSeedErr != nil {
+		return nil, hexSeedErr
+	}
+
+	privKey := sha256.Sum256(seed)
+	ecKey := NewECKey(privKey, true)
+	return ecKey, nil
 }
 
+//DEPRECIATED
 func ExtractPubKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {
 	Decrypted := Decrypt(EncryptedData,B64Key)
 	Unhexlified, err := hex.DecodeString(string(Decrypted))

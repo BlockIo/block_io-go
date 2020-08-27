@@ -5,66 +5,110 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/piotrnar/gocoin/lib/btc"
+	"github.com/btcsuite/btcd/btcec"
 	"golang.org/x/exp/utf8string"
 	"log"
 )
 
-func FromWIF(privKey string) (string, bool) {
+type ECKey struct {
+	d [32]byte
+	Compressed bool
+}
+
+func NewECKey (d [32]byte, compressed bool) *ECKey {
+	return &ECKey{
+		d: d,
+		Compressed: compressed,
+	}
+}
+
+func (eck *ECKey) PrivateKey() []byte {
+	return eck.d[:]
+}
+
+func (eck *ECKey) PrivateKeyHex() string {
+	return hex.EncodeToString(eck.PrivateKey())
+}
+
+func (eck *ECKey) PublicKey() []byte {
+	return btc.PublicFromPrivate(eck.PrivateKey(), eck.Compressed)
+}
+
+func (eck *ECKey) PublicKeyHex() string {
+	return hex.EncodeToString(eck.PublicKey())
+}
+
+func (eck *ECKey) Sign(message []byte) ([]byte, error) {
+	//TODO use gocoin instead of btcsuite/btcd
+	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), eck.d[:])
+	signature, err := privKey.Sign(message)
+	if (err != nil) {
+		return nil, err
+	}
+
+	return signature.Serialize(), nil
+}
+
+func (eck *ECKey) SignHex(message []byte) (string, error) {
+	signature, err := eck.Sign(message)
+	if (err != nil) {
+		return "", err
+	}
+	return hex.EncodeToString(signature), nil
+}
+
+func FromWIF(privKey string) (*ECKey, error) {
+
+	var keyBytes [32]byte
 	var extendedKeyBytes []byte = btc.Decodeb58(privKey)
 	extendedKeyBytes = extendedKeyBytes[0:34]
-
 	extendedKeyBytes = extendedKeyBytes[1:]
+
 	compressed := false
 	if len(extendedKeyBytes) == 33 {
 		if extendedKeyBytes[32] != 0x01 {
-			log.Fatal(errors.New("Invalid compression flag" + " PrivKey"))
+			return nil, errors.New("ECKey/FromWIF: Invalid compression flag")
 		}
-		extendedKeyBytes = extendedKeyBytes[0 : len(extendedKeyBytes)-1]
 		compressed = true
+	} else if len(extendedKeyBytes) != 32 {
+		return nil, errors.New("Invalid WIF payload")
 	}
 
-	if len(extendedKeyBytes) != 32 {
-		log.Fatal(errors.New("Invalid WIF payload length"))
-	}
+	copy(keyBytes[:], extendedKeyBytes)
+	eckey := NewECKey(keyBytes, compressed)
 
-	return hex.EncodeToString(extendedKeyBytes), compressed
-
+	return eckey, nil
 }
 
+//DEPRECIATED
 func PubKeyFromWIF(privKey string) string {
-
-	privKeyFromWifHex, compressed := FromWIF(privKey)
-	privKeyFromWifBytes, _ := hex.DecodeString(privKeyFromWifHex)
-	result := btc.PublicFromPrivate(privKeyFromWifBytes, compressed)
-
-	return hex.EncodeToString(result)
+	ecKey, _ := FromWIF(privKey)
+	return ecKey.PublicKeyHex()
 }
 
-func ExtractKeyFromPassphrase(HexPass string) string {
+func ExtractKeyFromPassphrase(HexPass string) *ECKey {
 	Unhexlified, err := hex.DecodeString(HexPass)
 
 	if err != nil {
 		log.Fatal(errors.New("Unhexlified Error"))
 	}
 
-	Hashed := sha256.Sum256(Unhexlified)
-	UsableHashed := Hashed[:]
-	return hex.EncodeToString(UsableHashed)
+	hashed := sha256.Sum256(Unhexlified)
+	return NewECKey(hashed, true)
 }
 
-func ExtractKeyFromPassphraseString(pass string) string {
+func ExtractKeyFromPassphraseString(pass string) *ECKey {
 	password := []byte(utf8string.NewString(pass).String())
 	hashed := sha256.Sum256(password)
-	usableHashed := hashed[:]
-	return hex.EncodeToString(usableHashed)
+	return NewECKey(hashed, true)
 }
 
+//DEPRECIATED
 func ExtractPubKeyFromPassphraseString(pass string) string {
-	privKey, _ := hex.DecodeString(ExtractKeyFromPassphraseString(pass))
-	result := btc.PublicFromPrivate(privKey, true)
-	return hex.EncodeToString(result)
+	return ExtractKeyFromPassphraseString(pass).PublicKeyHex()
 }
 
+//DEPRECIATED
 func ExtractPubKeyFromPassphrase(HexPass string) string {
 	Unhexlified, err := hex.DecodeString(HexPass)
 
