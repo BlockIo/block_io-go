@@ -33,7 +33,7 @@ func main() {
 	fmt.Println("Raw sweep response: ")
 	fmt.Println(rawSweepResponse)
 
-	sweepData, sweepDataErr := blockio.ParseResponseData(rawSweepResponse)
+	sweepData, sweepDataErr := blockio.ParseResponseData(rawSweepResponse.String())
 
 	if sweepDataErr != nil {
 		log.Fatal(sweepDataErr)

@@ -5,25 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
-	"github.com/go-resty/resty/v2"
-	"github.com/piotrnar/gocoin/lib/btc"
 	"golang.org/x/crypto/pbkdf2"
-	"log"
 )
 
-func SignInputs(ecKey *ECKey, DataToSign string) (string, error) {
-	messageHash, _ := hex.DecodeString(DataToSign)
-	signature, err := ecKey.Sign(messageHash)
-	if err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(signature), nil
-}
-
-func ParseResponseData(res *resty.Response) (SignatureData, error){
+func ParseResponseData(res string) (SignatureData, error){
 	var withdrawRes SignatureRes
-	marshalErr := json.Unmarshal([]byte(res.String()), &withdrawRes)
+	marshalErr := json.Unmarshal([]byte(res), &withdrawRes)
 	if marshalErr != nil {
 		return SignatureData{}, marshalErr
 	}
@@ -56,23 +43,6 @@ func ExtractKeyFromEncryptedPassphrase(encryptedData string, b64Key string) (*EC
 	return ecKey, nil
 }
 
-//DEPRECIATED
-func ExtractPubKeyFromEncryptedPassphrase(EncryptedData string, B64Key string) string {
-	Decrypted := Decrypt(EncryptedData,B64Key)
-	Unhexlified, err := hex.DecodeString(string(Decrypted))
-
-	if err != nil {
-		log.Fatal(errors.New("Unhexlified Error"))
-	}
-
-	Hashed := sha256.Sum256(Unhexlified)
-	UsableHashed := Hashed[:]
-
-	result := btc.PublicFromPrivate(UsableHashed, true)
-
-	return hex.EncodeToString(result)
-}
-
 func PinToAesKey(pin string) string {
 	var saltOld []byte = make([]byte, 0)
 	var salt [1024]byte;
@@ -88,9 +58,4 @@ func PinToAesKey(pin string) string {
 	key := pbkdf2.Key(firstHashBytes, saltOld, 1024, 32, sha256.New)
 
 	return base64.StdEncoding.EncodeToString(key)
-}
-
-func SHA256_hash(ba []byte) []byte {
-	sha := sha256.Sum256(ba)
-	return sha[:]
 }

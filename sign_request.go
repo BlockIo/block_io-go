@@ -2,8 +2,14 @@ package block_io_go
 
 import (
 	"encoding/json"
+	"encoding/hex"
 	"errors"
 )
+
+func SignInputs(ecKey *ECKey, DataToSign string) (string, error) {
+	messageHash, _ := hex.DecodeString(DataToSign)
+	return ecKey.SignHex(messageHash)
+}
 
 func signRequest(ecKey *ECKey, reqData SignatureData) SignatureData {
 

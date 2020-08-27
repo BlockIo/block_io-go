@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/piotrnar/gocoin/lib/btc"
 	"github.com/btcsuite/btcd/btcec"
-	"golang.org/x/exp/utf8string"
 	"log"
 )
 
@@ -80,12 +79,6 @@ func FromWIF(privKey string) (*ECKey, error) {
 	return eckey, nil
 }
 
-//DEPRECIATED
-func PubKeyFromWIF(privKey string) string {
-	ecKey, _ := FromWIF(privKey)
-	return ecKey.PublicKeyHex()
-}
-
 func ExtractKeyFromPassphrase(HexPass string) *ECKey {
 	Unhexlified, err := hex.DecodeString(HexPass)
 
@@ -98,28 +91,7 @@ func ExtractKeyFromPassphrase(HexPass string) *ECKey {
 }
 
 func ExtractKeyFromPassphraseString(pass string) *ECKey {
-	password := []byte(utf8string.NewString(pass).String())
+	password := []byte(pass)
 	hashed := sha256.Sum256(password)
 	return NewECKey(hashed, true)
-}
-
-//DEPRECIATED
-func ExtractPubKeyFromPassphraseString(pass string) string {
-	return ExtractKeyFromPassphraseString(pass).PublicKeyHex()
-}
-
-//DEPRECIATED
-func ExtractPubKeyFromPassphrase(HexPass string) string {
-	Unhexlified, err := hex.DecodeString(HexPass)
-
-	if err != nil {
-		log.Fatal(errors.New("Unhexlified Error"))
-	}
-
-	Hashed := sha256.Sum256(Unhexlified)
-	UsableHashed := Hashed[:]
-
-	result := btc.PublicFromPrivate(UsableHashed, true)
-
-	return hex.EncodeToString(result)
 }

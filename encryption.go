@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"encoding/base64"
 	"errors"
 )
 
@@ -112,19 +111,4 @@ func AESDecrypt(cipherText []byte, key []byte) ([]byte, error) {
 	unpadded := ecb.pkcs5UnPadding(decrypted)
 
 	return unpadded, nil
-}
-
-//DEPRECIATED
-func Encrypt(data string, key string) string {
-	usableKey, _ := base64.StdEncoding.DecodeString(key)
-	temp, _ := AESEncrypt([]byte(data), usableKey)
-	return base64.StdEncoding.EncodeToString(temp)
-}
-
-//DEPRECIATED
-func Decrypt(data string, key string) []byte {
-	usableKey, _ := base64.StdEncoding.DecodeString(key)
-	usableCrypt, _ := base64.StdEncoding.DecodeString(data)
-	temp, _ := AESDecrypt(usableCrypt, usableKey)
-	return temp
 }
