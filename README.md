@@ -1,33 +1,32 @@
-# block_io-go
-
 # BlockIo
 
-This Golang library is the official Block.IO SDK. To call the API, you will need the Dogecoin, Bitcoin, or Litecoin API key(s) from <a href="https://block.io" target="_blank">Block.io</a>. Go ahead, sign up :)
+This Golang library is the official Block.IO SDK. To use the functions provided by this SDK, you will need a REST client of your choice, and the Bitcoin, Litecoin , or Dogecoin API key(s) from <a href="https://block.io" target="_blank">Block.io</a>. Go ahead, sign up :)
 
 ## Installation
 
-    go get github.com/BlockIo/block_io-go
+```bash
+  go get github.com/BlockIo/block_io-go
+```
 
 ## Usage
 
-It's super easy to get started. In your code, do this:
+It's easy to get started. In your code, do this:
 
-    import blockio "github.com/BlockIo/block_io-go"
+```go
+  import blockio "github.com/BlockIo/block_io-go"
 
-    // Withdraw json response signing
+  var withdrawResponse string // store json string response to /api/v2/withdraw here
 
-    withdrawData, _ := blockio.ParseResponseData(rawWithdrawResponse.String())
-	signatureReq, _ := blockio.SignWithdrawRequest(pin, withdrawData)
+  withdrawData, _ := blockio.ParseResponseData(withdrawResponse)
+  signatureReq, _ := blockio.SignWithdrawRequest("YOUR_PIN", withdrawData)
 
-    // Sweep json response signing
+  // post signatureReq to /api/v2/sign_and_finalize_withdrawal
+```
 
-    ecKey, _ := blockio.FromWIF(strWif)
-    sweepData, _ := blockio.ParseResponseData(rawSweepResponse.String())
-	signatureReq, _ := blockio.SignSweepRequest(ecKey, sweepData)
-
-##### For a more detailed guide on usage, check the examples folder in the repo 
+##### For a more detailed guide on usage, check the examples folder in the repo
 
 ## Testing
 
 ```bash
-go test -v
+  go test -v
+```
