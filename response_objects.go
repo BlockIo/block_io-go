@@ -1,4 +1,14 @@
-package BlockIo
+package block_io_go
+
+type BaseResponse struct {
+	Status string        `json:"status"`
+	Data   interface{}	 `json:"data"`
+}
+
+type SignatureRes struct {
+	Status string        `json:"status"`
+	Data   SignatureData `json:"data"`
+}
 
 type SignatureData struct {
 	EncryptedPassphrase  EncryptedPassphrase `json:"encrypted_passphrase"`
