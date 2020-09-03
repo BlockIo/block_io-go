@@ -55,6 +55,18 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 	return string(signAndFinalizeReq), nil
 }
 
+// Convenience withdrawal request function that takes a JSON string
+func SignWithdrawRequestJson(pin string, withdrawData string) (string, error) {
+	withdrawObj, err := ParseSignatureResponse(withdrawData)
+
+	if err != nil {
+		return "", err
+	}
+
+	return SignWithdrawRequest(pin, withdrawObj)
+
+}
+
 func SignSweepRequest(eckey *ECKey, sweepReqData SignatureData) (string, error) {
 	if sweepReqData.ReferenceID == "" {
 		return "", errors.New("invalid sweep response")
