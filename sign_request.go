@@ -80,6 +80,16 @@ func SignSweepRequest(eckey *ECKey, sweepReqData SignatureData) (string, error) 
 	return string(signAndFinalizeReq), nil
 }
 
+func SignSweepRequestJson(ecKey *ECKey, sweepData string) (string, error) {
+	sweepObj, err := ParseSignatureResponse(sweepData)
+
+	if (err != nil) {
+		return "", err
+	}
+
+	return SignSweepRequest(ecKey, sweepObj)
+}
+
 func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData SignatureData) (string, error) {
 
 	for i := 0; i < len(dtrustReqData.Inputs); i++ {
