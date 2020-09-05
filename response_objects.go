@@ -5,6 +5,15 @@ type BaseResponse struct {
 	Data   interface{}	 `json:"data"`
 }
 
+type ErrorResponse struct {
+	Status string        `json:"status"`
+	Data   ErrorData     `json:"data"`
+}
+
+type ErrorData struct {
+	ErrorMessage string  `json:"error_message"`
+}
+
 type SignatureRes struct {
 	Status string        `json:"status"`
 	Data   SignatureData `json:"data"`

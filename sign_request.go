@@ -7,24 +7,39 @@ import (
 )
 
 func SignInputs(ecKey *ECKey, DataToSign string) (string, error) {
-	messageHash, _ := hex.DecodeString(DataToSign)
+	messageHash, err := hex.DecodeString(DataToSign)
+
+	if (err != nil) {
+		return "", err
+	}
+
 	return ecKey.SignHex(messageHash)
 }
 
-func signRequest(ecKey *ECKey, reqData SignatureData) SignatureData {
+func signRequest(ecKey *ECKey, reqData *SignatureData) error {
+  pubKey := ecKey.PublicKeyHex()
 
 	for i := 0; i < len(reqData.Inputs); i++ {
 		for j := 0; j < len(reqData.Inputs[i].Signers); j++ {
-			//TODO handle my errors
-			reqData.Inputs[i].Signers[j].SignedData, _ = SignInputs(ecKey, reqData.Inputs[i].DataToSign)
+
+			var err error = nil
+			if (reqData.Inputs[i].Signers[j].SignerPublicKey != pubKey) {
+				continue
+			}
+
+			reqData.Inputs[i].Signers[j].SignedData, err = SignInputs(ecKey, reqData.Inputs[i].DataToSign)
+			if (err != nil) {
+				return err
+			}
+
 		}
 	}
 	reqData.EncryptedPassphrase = EncryptedPassphrase{}
 
-	return reqData
+	return nil
 }
 
-func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error) {
+func SignWithdrawRequest(pin string, withdrawData *SignatureData) (string, error) {
 
 	if (withdrawData.ReferenceID == "" || withdrawData.EncryptedPassphrase == EncryptedPassphrase{} ||
 		withdrawData.EncryptedPassphrase.Passphrase == "") {
@@ -45,9 +60,12 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 		return "", errors.New("Public key mismatch")
 	}
 
-	signedWithdrawReqData := signRequest(ecKey, withdrawData)
+	signErr := signRequest(ecKey, withdrawData)
+	if signErr != nil {
+		return "", signErr
+	}
 
-	signAndFinalizeReq, err := json.Marshal(signedWithdrawReqData)
+	signAndFinalizeReq, err := json.Marshal(withdrawData)
 	if err != nil {
 		return "", err
 	}
@@ -55,31 +73,68 @@ func SignWithdrawRequest(pin string, withdrawData SignatureData) (string, error)
 	return string(signAndFinalizeReq), nil
 }
 
-func SignSweepRequest(eckey *ECKey, sweepReqData SignatureData) (string, error) {
+// Convenience withdrawal request function that takes a JSON string
+func SignWithdrawRequestJson(pin string, withdrawData string) (string, error) {
+	withdrawObj, err := ParseSignatureResponse(withdrawData)
+
+	if err != nil {
+		return "", err
+	}
+
+	return SignWithdrawRequest(pin, withdrawObj)
+}
+
+func SignSweepRequest(eckey *ECKey, sweepReqData *SignatureData) (string, error) {
 	if sweepReqData.ReferenceID == "" {
 		return "", errors.New("invalid sweep response")
 	}
 
-	signedSweepReqData := signRequest(eckey, sweepReqData)
-	signAndFinalizeReq, err := json.Marshal(signedSweepReqData)
+	signErr := signRequest(eckey, sweepReqData)
+	if signErr != nil {
+		return "", signErr
+	}
+
+	signAndFinalizeReq, err := json.Marshal(sweepReqData)
 	if err != nil {
 		return "", err
 	}
+
 	return string(signAndFinalizeReq), nil
 }
 
-func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData SignatureData) (string, error) {
+func SignSweepRequestJson(ecKey *ECKey, sweepData string) (string, error) {
+	sweepObj, err := ParseSignatureResponse(sweepData)
 
-	for i := 0; i < len(dtrustReqData.Inputs); i++ {
-		for j := 0; j < len(dtrustReqData.Inputs[i].Signers); j++ {
-			//TODO handle my errors
-			dtrustReqData.Inputs[i].Signers[j].SignedData, _ = SignInputs(ecKeys[j], dtrustReqData.Inputs[i].DataToSign)
+	if (err != nil) {
+		return "", err
+	}
+
+	return SignSweepRequest(ecKey, sweepObj)
+}
+
+func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData *SignatureData) (string, error) {
+
+	for i := 0; i < len(ecKeys); i++ {
+		signErr := signRequest(ecKeys[i], dtrustReqData)
+		if (signErr != nil) {
+			return "", nil
 		}
 	}
 
-	signAndFinalizeReq, err := json.Marshal(dtrustReqData)
+	output, err := json.Marshal(dtrustReqData)
 	if err != nil {
 		return "", err
 	}
-	return string(signAndFinalizeReq), nil
+
+	return string(output), nil
+}
+
+func SignDtrustRequestJson(ecKeys []*ECKey, data string) (string, error) {
+	sigObj, err := ParseSignatureResponse(data)
+
+	if (err != nil) {
+		return "", err
+	}
+
+	return SignDtrustRequest(ecKeys, sigObj)
 }
