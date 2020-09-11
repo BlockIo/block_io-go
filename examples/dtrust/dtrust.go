@@ -35,7 +35,6 @@ func main(){
 		blockio.ExtractKeyFromPassphraseString("verysecretkey1"),
 		blockio.ExtractKeyFromPassphraseString("verysecretkey2"),
 		blockio.ExtractKeyFromPassphraseString("verysecretkey3"),
-		blockio.ExtractKeyFromPassphraseString("verysecretkey4"),
 	}
 
 	// populate our pubkeys array from the keys we just generated
@@ -44,7 +43,6 @@ func main(){
 		privKeys[0].PublicKeyHex(),
 		privKeys[1].PublicKeyHex(),
 		privKeys[2].PublicKeyHex(),
-		privKeys[3].PublicKeyHex(),
 	}
 
 	signers := strings.Join(pubKeys, ",")
@@ -159,23 +157,37 @@ func main(){
 	fmt.Println("Withdraw from Dtrust Address response:");
 	fmt.Println(withdrawDtrustRes)
 
-	// the response contains data to sign and all the public_keys that need to sign it
-	// you can distribute this response to different processes that stored your
-	// private keys and have them inform block.io after signing the data. You can
-	// then finalize the transaction so that it gets broadcasted to the network.
-	//
-	// Below, we take this response, extract the data to sign, sign it,
-	// and inform Block.io of the signatures, for each signer.
-	signatureReq, signErr := blockio.SignDtrustRequestJson(privKeys, withdrawDtrustRes.String())
+	// Sign request with one key
+	signatureReq, signErr := blockio.SignDtrustRequestWithKey(privKeys[0], withdrawDtrustRes.String())
 
 	if signErr != nil {
 		log.Fatal(signErr)
 	}
 
-	fmt.Println("Our Signed Request: ")
+	fmt.Println("Our Request signed with a single key: ")
 	fmt.Println(signatureReq)
 
 	signAndFinalizeRes, signAndFinalizeErr := restClient.R().
+		SetHeader("Accept", "application/json").
+		SetBody(map[string]interface{}{
+			"signature_data": signatureReq,
+		}).Post("https://block.io/api/v2/sign_and_finalize_withdrawal?api_key=" + apiKey)
+
+	if signAndFinalizeErr != nil {
+		log.Fatal(signAndFinalizeErr)
+	}
+
+	// Sign request with 2 keys
+	signatureReq, signErr = blockio.SignDtrustRequestWithKeys(privKeys[1:3], withdrawDtrustRes.String())
+
+	if signErr != nil {
+		log.Fatal(signErr)
+	}
+
+	fmt.Println("Our Request signed with 2 keys: ")
+	fmt.Println(signatureReq)
+
+	signAndFinalizeRes, signAndFinalizeErr = restClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
 			"signature_data": signatureReq,
