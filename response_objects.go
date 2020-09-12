@@ -14,15 +14,6 @@ type ErrorData struct {
 	ErrorMessage string  `json:"error_message"`
 }
 
-type AddrResponse struct {
-	Status string        `json:"status"`
-	Data   Address	 	 `json:"data"`
-}
-
-type Address struct {
-	Val string `json:"address"`
-}
-
 type SignatureRes struct {
 	Status string        `json:"status"`
 	Data   SignatureData `json:"data"`

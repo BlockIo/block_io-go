@@ -65,7 +65,7 @@ func main(){
 		log.Fatal(newDtrustAddrErr)
 	}
 
-	parsedRes, parseErr := blockio.ParseAddrResponse(newDtrustAddrRes.String())
+	parsedRes, parseErr := ParseAddrResponse(newDtrustAddrRes.String())
 
 	if parseErr != nil {
 		log.Fatal(parseErr)
@@ -130,7 +130,7 @@ func main(){
 		log.Fatal(defaultAddrErr)
 	}
 
-	parsedRes, parseErr = blockio.ParseAddrResponse(defaultAddrRes.String())
+	parsedRes, parseErr = ParseAddrResponse(defaultAddrRes.String())
 
 	if parseErr != nil {
 		log.Fatal(parseErr)
