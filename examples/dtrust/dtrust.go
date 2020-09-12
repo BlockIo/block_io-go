@@ -65,13 +65,12 @@ func main(){
 		log.Fatal(newDtrustAddrErr)
 	}
 
-	parsedRes, parseErr := blockio.ParseResponse(newDtrustAddrRes.String())
+	parsedRes, parseErr := blockio.ParseAddrResponse(newDtrustAddrRes.String())
 
 	if parseErr != nil {
 		log.Fatal(parseErr)
 	}
-
-	dtrustAddress = parsedRes.Data.(map[string]interface{})["address"].(string)
+	dtrustAddress = parsedRes.Val
 	fmt.Println("Our dTrust Address: " + dtrustAddress)
 
 	// let's send some coins to our new address
@@ -131,13 +130,13 @@ func main(){
 		log.Fatal(defaultAddrErr)
 	}
 
-	parsedRes, parseErr = blockio.ParseResponse(defaultAddrRes.String())
+	parsedRes, parseErr = blockio.ParseAddrResponse(defaultAddrRes.String())
 
 	if parseErr != nil {
 		log.Fatal(parseErr)
 	}
 
-	normalAddress := parsedRes.Data.(map[string]interface{})["address"].(string)
+	normalAddress := parsedRes.Val
 
 	fmt.Println("Withdrawing from dtrust_address_label to the 'default' label in normal multisig")
 

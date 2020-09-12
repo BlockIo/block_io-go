@@ -20,6 +20,21 @@ func ParseResponse(res string) (*BaseResponse, error){
 	return &resStruct, nil
 }
 
+func ParseAddrResponse(res string) (*Address, error){
+	resErr := ValidateResponseJson(res)
+	if (resErr != nil) {
+		return nil, resErr
+	}
+
+	var addrRes AddrResponse
+	marshalErr := json.Unmarshal([]byte(res), &addrRes)
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+
+	return &addrRes.Data, nil
+}
+
 func ParseSignatureResponse(res string) (*SignatureData, error){
   resErr := ValidateResponseJson(res)
 	if (resErr != nil) {
