@@ -157,7 +157,7 @@ func main(){
 	fmt.Println(withdrawDtrustRes)
 
 	// Sign request with one key
-	signatureReq, signErr := blockio.SignDtrustRequestWithKey(privKeys[0], withdrawDtrustRes.String())
+	signatureReq, signErr := blockio.SignRequestJsonWithKey(privKeys[0], withdrawDtrustRes.String())
 
 	if signErr != nil {
 		log.Fatal(signErr)
@@ -177,7 +177,7 @@ func main(){
 	}
 
 	// Sign request with 2 keys
-	signatureReq, signErr = blockio.SignDtrustRequestWithKeys(privKeys[1:3], withdrawDtrustRes.String())
+	signatureReq, signErr = blockio.SignRequestJsonWithKeys(privKeys[1:3], withdrawDtrustRes.String())
 
 	if signErr != nil {
 		log.Fatal(signErr)

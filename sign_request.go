@@ -6,8 +6,9 @@ import (
 	"errors"
 )
 
-func SignInputs(ecKey *ECKey, DataToSign string) (string, error) {
-	messageHash, err := hex.DecodeString(DataToSign)
+// Sign any hex string
+func SignInputs(ecKey *ECKey, hexData string) (string, error) {
+	messageHash, err := hex.DecodeString(hexData)
 
 	if (err != nil) {
 		return "", err
@@ -22,28 +23,29 @@ func signRequest(ecKey *ECKey, reqData *SignatureData) error {
 	for i := 0; i < len(reqData.Inputs); i++ {
 		for j := 0; j < len(reqData.Inputs[i].Signers); j++ {
 
-			var err error = nil
 			if (reqData.Inputs[i].Signers[j].SignerPublicKey != pubKey) {
 				continue
 			}
 
+			var err error = nil
 			reqData.Inputs[i].Signers[j].SignedData, err = SignInputs(ecKey, reqData.Inputs[i].DataToSign)
+
 			if (err != nil) {
 				return err
 			}
 
 		}
 	}
-	reqData.EncryptedPassphrase = EncryptedPassphrase{}
 
 	return nil
 }
 
+// Sign a withdrawal request with a pin
 func SignWithdrawRequest(pin string, withdrawData *SignatureData) (string, error) {
 
-	if (withdrawData.ReferenceID == "" || withdrawData.EncryptedPassphrase == EncryptedPassphrase{} ||
+	if (withdrawData.EncryptedPassphrase == EncryptedPassphrase{} ||
 		withdrawData.EncryptedPassphrase.Passphrase == "") {
-		return "", errors.New("invalid withdraw response")
+		return "", errors.New("Withdrawal sign request is missing encrypted passphrase")
 	}
 
 	aesKey := PinToAesKey(pin)
@@ -60,17 +62,9 @@ func SignWithdrawRequest(pin string, withdrawData *SignatureData) (string, error
 		return "", errors.New("Public key mismatch")
 	}
 
-	signErr := signRequest(ecKey, withdrawData)
-	if signErr != nil {
-		return "", signErr
-	}
+	withdrawData.EncryptedPassphrase = EncryptedPassphrase{}
 
-	signAndFinalizeReq, err := json.Marshal(withdrawData)
-	if err != nil {
-		return "", err
-	}
-
-	return string(signAndFinalizeReq), nil
+	return SignRequestWithKey(ecKey, withdrawData)
 }
 
 // Convenience withdrawal request function that takes a JSON string
@@ -84,44 +78,51 @@ func SignWithdrawRequestJson(pin string, withdrawData string) (string, error) {
 	return SignWithdrawRequest(pin, withdrawObj)
 }
 
-func SignRequestWithKey(eckey *ECKey, sweepReqData *SignatureData) (string, error) {
-	if sweepReqData.ReferenceID == "" {
-		return "", errors.New("invalid sweep response")
+// Sign a withdrawal request with a custom ECKey
+func SignRequestWithKey(eckey *ECKey, sigRequest *SignatureData) (string, error) {
+	if sigRequest.ReferenceID == "" {
+		return "", errors.New("Signing request is missing referenceId")
 	}
 
-	signErr := signRequest(eckey, sweepReqData)
+	signErr := signRequest(eckey, sigRequest)
 	if signErr != nil {
 		return "", signErr
 	}
 
-	signAndFinalizeReq, err := json.Marshal(sweepReqData)
+	jsonData, err := json.Marshal(sigRequest)
 	if err != nil {
 		return "", err
 	}
 
-	return string(signAndFinalizeReq), nil
+	return string(jsonData), nil
 }
 
-func SignRequestJson(ecKey *ECKey, sweepData string) (string, error) {
-	sweepObj, err := ParseSignatureResponse(sweepData)
+// Sign a JSON string withdrawal request with a custom ECKey
+func SignRequestJsonWithKey(ecKey *ECKey, data string) (string, error) {
+	sigRequest, err := ParseSignatureResponse(data)
 
 	if (err != nil) {
 		return "", err
 	}
 
-	return SignRequestWithKey(ecKey, sweepObj)
+	return SignRequestWithKey(ecKey, sigRequest)
 }
 
-func SignRequestWithKeys(ecKeys []*ECKey, dtrustReqData *SignatureData) (string, error) {
+// Sign a withdrawal request with a set of custom ECKeys
+func SignRequestWithKeys(ecKeys []*ECKey, sigRequest *SignatureData) (string, error) {
+
+	if sigRequest.ReferenceID == "" {
+		return "", errors.New("Signing request is missing referenceId")
+	}
 
 	for i := 0; i < len(ecKeys); i++ {
-		signErr := signRequest(ecKeys[i], dtrustReqData)
+		signErr := signRequest(ecKeys[i], sigRequest)
 		if (signErr != nil) {
 			return "", nil
 		}
 	}
 
-	output, err := json.Marshal(dtrustReqData)
+	output, err := json.Marshal(sigRequest)
 	if err != nil {
 		return "", err
 	}
@@ -129,6 +130,7 @@ func SignRequestWithKeys(ecKeys []*ECKey, dtrustReqData *SignatureData) (string,
 	return string(output), nil
 }
 
+// Sign a JSON string withdrawal request with a set of custom ECKeys
 func SignRequestJsonWithKeys(ecKeys []*ECKey, data string) (string, error) {
 	sigObj, err := ParseSignatureResponse(data)
 
@@ -139,14 +141,12 @@ func SignRequestJsonWithKeys(ecKeys []*ECKey, data string) (string, error) {
 	return SignRequestWithKeys(ecKeys, sigObj)
 }
 
-func SignDtrustRequestWithKeys(ecKeys []*ECKey, data string)(string, error){
-	return SignRequestJsonWithKeys(ecKeys, data)
+//DEPRECIATED. Use SignRequestWithKeys or SignRequestJsonWithKeys
+func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData SignatureData)(string, error){
+	return SignRequestWithKeys(ecKeys, &dtrustReqData)
 }
 
-func SignDtrustRequestWithKey(ecKey *ECKey, data string)(string, error){
-	return SignRequestJson(ecKey, data)
-}
-
-func SignSweepRequest(ecKey *ECKey, data string)(string, error){
-	return SignRequestJson(ecKey, data)
+//DEPRECIATED. Use SignRequestWithKey or SignRequestJsonWithKey
+func SignSweepRequest(ecKey *ECKey, sweepReqData SignatureData)(string, error){
+	return SignRequestWithKey(ecKey, &sweepReqData)
 }

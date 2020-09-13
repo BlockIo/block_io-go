@@ -43,7 +43,7 @@ func main() {
 	}
 
 	// sign the request with the ECKey
-	signatureReq, signErr := blockio.SignSweepRequest(ecKey, sweepData.String())
+	signatureReq, signErr := blockio.SignRequestJsonWithKey(ecKey, sweepData.String())
 
 	if signErr != nil {
 		log.Fatal(signErr)
