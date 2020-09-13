@@ -14,17 +14,17 @@ type Address struct {
 	Val string `json:"address"`
 }
 
-func ParseAddrResponse(res string) (*Address, error){
+func ParseAddrResponse(res string) (string, error){
 	resErr := blockio.ValidateResponseJson(res)
-	if (resErr != nil) {
-		return nil, resErr
+	if resErr != nil {
+		return "", resErr
 	}
 
 	var addrRes AddrResponse
 	marshalErr := json.Unmarshal([]byte(res), &addrRes)
 	if marshalErr != nil {
-		return nil, marshalErr
+		return "", marshalErr
 	}
 
-	return &addrRes.Data, nil
+	return addrRes.Data.Val, nil
 }

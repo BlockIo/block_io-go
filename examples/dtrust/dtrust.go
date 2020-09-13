@@ -65,12 +65,12 @@ func main(){
 		log.Fatal(newDtrustAddrErr)
 	}
 
-	parsedRes, parseErr := ParseAddrResponse(newDtrustAddrRes.String())
+	parsedAddr, parseErr := ParseAddrResponse(newDtrustAddrRes.String())
 
 	if parseErr != nil {
 		log.Fatal(parseErr)
 	}
-	dtrustAddress = parsedRes.Val
+	dtrustAddress = parsedAddr
 	fmt.Println("Our dTrust Address: " + dtrustAddress)
 
 	// let's send some coins to our new address
@@ -130,13 +130,13 @@ func main(){
 		log.Fatal(defaultAddrErr)
 	}
 
-	parsedRes, parseErr = ParseAddrResponse(defaultAddrRes.String())
+	parsedAddr, parseErr = ParseAddrResponse(defaultAddrRes.String())
 
 	if parseErr != nil {
 		log.Fatal(parseErr)
 	}
 
-	normalAddress := parsedRes.Val
+	normalAddress := parsedAddr
 
 	fmt.Println("Withdrawing from dtrust_address_label to the 'default' label in normal multisig")
 
