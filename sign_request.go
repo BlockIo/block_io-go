@@ -84,7 +84,7 @@ func SignWithdrawRequestJson(pin string, withdrawData string) (string, error) {
 	return SignWithdrawRequest(pin, withdrawObj)
 }
 
-func SignSweepRequest(eckey *ECKey, sweepReqData *SignatureData) (string, error) {
+func SignRequestWithKey(eckey *ECKey, sweepReqData *SignatureData) (string, error) {
 	if sweepReqData.ReferenceID == "" {
 		return "", errors.New("invalid sweep response")
 	}
@@ -102,17 +102,17 @@ func SignSweepRequest(eckey *ECKey, sweepReqData *SignatureData) (string, error)
 	return string(signAndFinalizeReq), nil
 }
 
-func SignSweepRequestJson(ecKey *ECKey, sweepData string) (string, error) {
+func SignRequestJson(ecKey *ECKey, sweepData string) (string, error) {
 	sweepObj, err := ParseSignatureResponse(sweepData)
 
 	if (err != nil) {
 		return "", err
 	}
 
-	return SignSweepRequest(ecKey, sweepObj)
+	return SignRequestWithKey(ecKey, sweepObj)
 }
 
-func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData *SignatureData) (string, error) {
+func SignRequestWithKeys(ecKeys []*ECKey, dtrustReqData *SignatureData) (string, error) {
 
 	for i := 0; i < len(ecKeys); i++ {
 		signErr := signRequest(ecKeys[i], dtrustReqData)
@@ -129,12 +129,24 @@ func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData *SignatureData) (string, e
 	return string(output), nil
 }
 
-func SignDtrustRequestJson(ecKeys []*ECKey, data string) (string, error) {
+func SignRequestJsonWithKeys(ecKeys []*ECKey, data string) (string, error) {
 	sigObj, err := ParseSignatureResponse(data)
 
 	if (err != nil) {
 		return "", err
 	}
 
-	return SignDtrustRequest(ecKeys, sigObj)
+	return SignRequestWithKeys(ecKeys, sigObj)
+}
+
+func SignDtrustRequestWithKeys(ecKeys []*ECKey, data string)(string, error){
+	return SignRequestJsonWithKeys(ecKeys, data)
+}
+
+func SignDtrustRequestWithKey(ecKey *ECKey, data string)(string, error){
+	return SignRequestJson(ecKey, data)
+}
+
+func SignSweepRequest(ecKey *ECKey, data string)(string, error){
+	return SignRequestJson(ecKey, data)
 }

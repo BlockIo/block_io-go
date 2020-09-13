@@ -16,9 +16,7 @@ It's easy to get started. In your code, do this:
   import blockio "github.com/BlockIo/block_io-go"
 
   var withdrawResponse string // store json string response to /api/v2/withdraw here
-
-  withdrawData, _ := blockio.ParseResponseData(withdrawResponse)
-  signatureReq, _ := blockio.SignWithdrawRequest("YOUR_PIN", withdrawData)
+  signatureReq, _ := blockio.SignWithdrawRequestJson("YOUR_PIN", withdrawResponse)
 
   // post signatureReq to /api/v2/sign_and_finalize_withdrawal
 ```
