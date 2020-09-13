@@ -8,13 +8,13 @@ import (
 
 // Sign any hex string
 func SignInputs(ecKey *ECKey, hexData string) (string, error) {
-	messageHash, err := hex.DecodeString(hexData)
+	data, err := hex.DecodeString(hexData)
 
 	if (err != nil) {
 		return "", err
 	}
 
-	return ecKey.SignHex(messageHash)
+	return ecKey.SignHex(data)
 }
 
 func signRequest(ecKey *ECKey, reqData *SignatureData) error {
@@ -142,11 +142,11 @@ func SignRequestJsonWithKeys(ecKeys []*ECKey, data string) (string, error) {
 }
 
 //DEPRECIATED. Use SignRequestWithKeys or SignRequestJsonWithKeys
-func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData SignatureData)(string, error){
+func SignDtrustRequest(ecKeys []*ECKey, dtrustReqData SignatureData) (string, error) {
 	return SignRequestWithKeys(ecKeys, &dtrustReqData)
 }
 
 //DEPRECIATED. Use SignRequestWithKey or SignRequestJsonWithKey
-func SignSweepRequest(ecKey *ECKey, sweepReqData SignatureData)(string, error){
+func SignSweepRequest(ecKey *ECKey, sweepReqData SignatureData) (string, error) {
 	return SignRequestWithKey(ecKey, &sweepReqData)
 }
