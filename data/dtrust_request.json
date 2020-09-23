@@ -1,0 +1,33 @@
+{
+  "status" : "success",
+  "data" : {
+    "reference_id" : "8b05c7f8a1ba19cbaf3fc052418fb67ea1eda4165b23ce67dbf025035d8b9ba0",
+    "more_signatures_needed" : true,
+    "inputs" : [
+      {
+        "input_no" : 0,
+        "signatures_needed" : 3,
+        "data_to_sign" : "70245adc7c4a9de30e847e2e7e531954ebda39dd7053228428996dce03794727",
+        "signers" : [
+          {
+            "signer_address" : "moyUyaSnPjWADnGpvWNpCACDXmGkEs6KPT",
+            "signer_public_key" : "02c5c6f541189bf56bfef5e5cd3869be1559c83d80d7f48780f123512570e526dc",
+            "signed_data" : null
+          },
+          {
+            "signer_address" : "mxuWVmpKe2mwtySsNKGpNkeUnbo7EggMzk",
+            "signer_public_key" : "0336ec8aa134c72652812bba706d5a21762e2b7173dd04585fcb28b2c65ef783db",
+            "signed_data" : null
+          },
+          {
+            "signer_address" : "mosygx7F9qjPeCRFjm4ptVNqQfVzdQVUBk",
+            "signer_public_key" : "02f600ab117b67bbfc20c97f5f18ddc52593f9373add1c1a963d66106d7be7ccd3",
+            "signed_data" : null
+          }
+        ]
+      }
+    ],
+    "encrypted_passphrase" : null,
+    "unsigned_tx_hex" : "0100000001f346af5501b46d1e5ade678dc6c17b10ea7a1099acc700f2ad47d092f73edd490000000000ffffffff0240420f000000000017a914aac80d0832685987053950d1b1ed55b6e4a7aae787e4418900000000002200204a71cd09604558eb8c8746cbaec75a3ef8e94fe3b7e6d340be5de776632d821900000000"
+  }
+}
