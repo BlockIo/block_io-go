@@ -9,9 +9,13 @@ import (
 )
 
 var signingPin string
+
 var withdrawReqJson string
 var sweepReqJson string
+var dTrustReqJson string
+
 var key *ECKey
+var keys []*ECKey
 
 func SignWithdrawRequestSetup(t *testing.T) {
 	var reqBuf strings.Builder
@@ -55,6 +59,29 @@ func SignSweepRequestSetup(t *testing.T) {
 	key = ecKey
 }
 
+func SignDtrustRequestSetup(t *testing.T) {
+	var reqBuf strings.Builder
+	signingPin = "Was1qWas1q"
+
+	dTrustReqFile, err := os.Open("fixtures/dtrust_request.json")
+	if err != nil {
+		t.Error(err)
+	}
+	defer dTrustReqFile.Close()
+
+	_, err = io.Copy(&reqBuf, dTrustReqFile)
+	if err != nil {
+		t.Error(err)
+	}
+
+	dTrustReqJson = reqBuf.String()
+
+	keys = []*ECKey{
+		ExtractKeyFromPassphraseString("verysecretkey2"),
+		ExtractKeyFromPassphraseString("verysecretkey3"),
+	}
+}
+
 func ParseResult(str string) (*SignatureData, error) {
 	var data SignatureData
 	err := json.Unmarshal([]byte(str), &data)
@@ -92,6 +119,9 @@ func compareSignedRequest(sigs expSignedInputs, request *SignatureData, sigObj *
 			expSig := sigs[indexedInput][j]
 			actSig := actSignerObj.SignedData
 
+			if actSig == nil {
+				actSig = "null"
+			}
 			// make sure the signatures are correct
 			if expSig != actSig {
 				t.Errorf(
@@ -145,6 +175,31 @@ func TestSweep(t *testing.T){
 		0: []string{"30440220480a498bb662ec3993cf9e429143acb40d1b9c29e2d1256bbbb4c26506e9708902205f41f66c2ec5340f7d1dcbee1940b67faf768160c9c7e1ef3d199794bbc69d13"},
 	}
 	reqObj, reqErr := ParseSignatureResponse(sweepReqJson)
+	if reqErr != nil {
+		t.Errorf("Parsing the unsigned JSON threw an error: %s", reqErr)
+	}
+	// parse the JSON output - must output valid json and not throw error
+	sigObj, parseErr := ParseResult(signatureReq)
+	if parseErr != nil {
+		t.Errorf("Parsing the signed JSON threw an error: %s", parseErr)
+	}
+	compareSignedRequest(expectedSigs, reqObj, sigObj, t)
+}
+
+func TestDtrust(t *testing.T){
+	SignDtrustRequestSetup(t)
+	signatureReq, signErr := SignRequestJsonWithKeys(keys, dTrustReqJson)
+	if signErr != nil {
+		t.Errorf("Signing threw an error: %s", signErr)
+	}
+	// signatures we expect
+	expectedSigs := expSignedInputs{
+		0: []string{
+			"null",
+			"3044022061fba610968257004b3668a294df0e4356f752e9916998988eabe5333ed5b7d702204e720d189b7cd4583dbe5a96e23f10117c9383401a1a1743dcf5a08fd8dbbfc5",
+			"304502210085bb574741c747250d7ca09558583fd0831a774d8c3f57dd979a2dea47ad8f26022038faf15eeb88537647cb22c5300fefcde7cf7d35c3e041114af2feeddac3af25"},
+	}
+	reqObj, reqErr := ParseSignatureResponse(dTrustReqJson)
 	if reqErr != nil {
 		t.Errorf("Parsing the unsigned JSON threw an error: %s", reqErr)
 	}
