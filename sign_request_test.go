@@ -1,6 +1,7 @@
 package block_io_go
 
 import (
+	"encoding/json"
 	"io"
 	"os"
 	"strings"
@@ -13,10 +14,9 @@ var withdrawSigned string
 
 func SignWithdrawRequestSetup(t *testing.T) {
 	var reqBuf strings.Builder
-	var signedBuf strings.Builder
 	signingPin = "Was1qWas1q"
 
-	withdrawReqFile, err := os.Open("data/withdraw_request.json")
+	withdrawReqFile, err := os.Open("fixtures/withdraw_request.json")
 	if err != nil {
 		t.Error(err)
 	}
@@ -28,27 +28,83 @@ func SignWithdrawRequestSetup(t *testing.T) {
 	}
 
 	withdrawReqJson = reqBuf.String()
-
-	withdrawSignedFile, err := os.Open("data/withdraw_signed.json")
-	if err != nil {
-		t.Error(err)
-	}
-	defer withdrawSignedFile.Close()
-
-	_, err = io.Copy(&signedBuf, withdrawSignedFile)
-	if err != nil {
-		t.Error(err)
-	}
-	withdrawSigned = signedBuf.String()
 }
+
+func ParseResult(str string) (*SignatureData, error) {
+	var data SignatureData
+	err := json.Unmarshal([]byte(str), &data)
+	if err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
+func compareSignedRequest(sigs expSignedInputs, request *SignatureData, sigObj *SignatureData, t *testing.T) {
+
+	// test if we got the correct amount of inputs
+	if len(sigObj.Inputs) != len(sigs) {
+		t.Errorf("Expected %d inputs, got %d", len(sigs), len(sigObj.Inputs))
+	}
+
+	// loop through all inputs
+	for i := 0; i < len(sigObj.Inputs); i++ {
+
+		// cache some vars
+		indexedInput := sigObj.Inputs[i].InputNo
+		expectedNumSigs := len(sigs[indexedInput])
+		actualNumSigs := len(sigObj.Inputs[i].Signers)
+
+		// check if the number of signatures matched
+		if actualNumSigs != expectedNumSigs {
+			t.Errorf("Expected %d signed inputs, got %d", expectedNumSigs, actualNumSigs)
+		}
+
+		// loop through each signer per input
+		for j := 0; j < expectedNumSigs; j++ {
+
+			origSignerObj := request.Inputs[i].Signers[j]
+			actSignerObj := sigObj.Inputs[i].Signers[j]
+			expSig := sigs[indexedInput][j]
+			actSig := actSignerObj.SignedData
+
+			// make sure the signatures are correct
+			if expSig != actSig {
+				t.Errorf(
+					"Signature mismatch on input_no %d, signature %d\n  expected: %s\n  got:      %s",
+					indexedInput, j, expSig, actSig)
+			}
+
+			// make sure the pubkey has not been changed
+			if actSignerObj.SignerPublicKey != origSignerObj.SignerPublicKey {
+				t.Errorf(
+					"Public key mismatch on input_no %d, signature %d\n  expected: %s\n  got:      %s",
+					indexedInput, j, origSignerObj.SignerPublicKey, actSignerObj.SignerPublicKey)
+			}
+		}
+	}
+}
+
+type expSignedInputs map[int64][]string
 
 func TestWithdraw(t *testing.T) {
 	SignWithdrawRequestSetup(t)
 	signatureReq, signErr := SignWithdrawRequestJson(signingPin, withdrawReqJson)
 	if signErr != nil {
-		t.Error(signErr)
+		t.Errorf("Signing threw an error: %s", signErr)
 	}
-	if signatureReq != withdrawSigned {
-		t.Error("SignWithdrawRequestJson failed")
+	// signatures we expect
+	expectedSigs := expSignedInputs{
+		0: []string{"304502210084c918bb4d1bda7c8be9946bb5e4d073a992098effdc46e870a2c0bcb538774702204bac1b603ffaff3f744b3aa0494e743d17744e8490d990f3b458f5da6b08d29c"},
+		1: []string{"3045022100be9d194a967a91c8f77db4c6bf0bd3d2fdb2235cd6a78328954c448e255aa17d02207bb89868300c594838b5fedad6f01810dbf9d2c97e44e267c63b121cab2dcdeb"},
 	}
+	reqObj, reqErr := ParseSignatureResponse(withdrawReqJson)
+	if reqErr != nil {
+		t.Errorf("Parsing the unsigned JSON threw an error: %s", reqErr)
+	}
+	// parse the JSON output - must output valid json and not throw error
+	sigObj, parseErr := ParseResult(signatureReq)
+	if parseErr != nil {
+		t.Errorf("Parsing the signed JSON threw an error: %s", parseErr)
+	}
+	compareSignedRequest(expectedSigs, reqObj, sigObj, t)
 }
