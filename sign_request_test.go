@@ -79,6 +79,11 @@ func parseResult(str string) (*SignatureData, error) {
 // compare signed request with expected signatures and the original request
 func compareSignedRequest(sigs expSignedInputs, request *SignatureData, sigObj *SignatureData, t *testing.T) {
 
+	// make sure there is no encrypted passphrase
+	if (sigObj.EncryptedPassphrase != EncryptedPassphrase{}) {
+		t.Errorf("Expected no encrypted passphrase, got %s", sigObj.EncryptedPassphrase)
+	}
+
 	// test if we got the correct amount of inputs
 	if len(sigObj.Inputs) != len(sigs) {
 		t.Errorf("Expected %d inputs, got %d", len(sigs), len(sigObj.Inputs))
