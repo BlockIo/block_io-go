@@ -84,6 +84,12 @@ func compareSignedRequest(sigs expSignedInputs, request *SignatureData, sigObj *
 		t.Errorf("Expected no encrypted passphrase, got %s", sigObj.EncryptedPassphrase)
 	}
 
+	// reference must not have changed
+	if (sigObj.ReferenceID != request.ReferenceID) {
+		t.Errorf("ReferenceID doesn't match.\n  expected: %s\n  got:      %s",
+			request.ReferenceID, sigObj.ReferenceID)
+	}
+
 	// test if we got the correct amount of inputs
 	if len(sigObj.Inputs) != len(sigs) {
 		t.Errorf("Expected %d inputs, got %d", len(sigs), len(sigObj.Inputs))
