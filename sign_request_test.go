@@ -102,6 +102,13 @@ func compareSignedRequest(sigs expSignedInputs, request *SignatureData, sigObj *
 		expectedNumSigs := sigs.numSigs(indexedInput)
 		actualNumSigs := 0
 
+		// make sure the DataToSign has not been changed
+		if sigObj.Inputs[i].DataToSign != request.Inputs[i].DataToSign {
+			t.Errorf(
+				"DataToSign mismatch on input_no %d.\n  expected: %s\n  got:      %s",
+				indexedInput, request.Inputs[i].DataToSign, sigObj.Inputs[i].DataToSign)
+		}
+
 		// loop through each signer per input
 		for j := 0; j < len(request.Inputs[i].Signers); j++ {
 
