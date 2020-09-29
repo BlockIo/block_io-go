@@ -3,7 +3,6 @@ package block_io_go
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
 	"log"
@@ -68,19 +67,33 @@ func FromWIF(strWif string) (*ECKey, error) {
 	return eckey, nil
 }
 
-func ExtractKeyFromPassphrase(HexPass string) *ECKey {
-	Unhexlified, err := hex.DecodeString(HexPass)
+func DeriveKeyFromHex(hexPass string) (*ECKey, error) {
+	unhexlified, err := hex.DecodeString(hexPass)
 
 	if err != nil {
-		log.Fatal(errors.New("Unhexlified Error"))
+		return nil, err
 	}
 
-	hashed := sha256.Sum256(Unhexlified)
-	return NewECKey(hashed, true)
+	hashed := sha256.Sum256(unhexlified)
+	return NewECKey(hashed, true), nil
 }
 
-func ExtractKeyFromPassphraseString(pass string) *ECKey {
+func DeriveKeyFromString(pass string) *ECKey {
 	password := []byte(pass)
 	hashed := sha256.Sum256(password)
 	return NewECKey(hashed, true)
+}
+
+//DEPRECIATED: Please use DeriveKeyFromHex
+func ExtractKeyFromPassphrase(hexPass string) *ECKey {
+	key, err := DeriveKeyFromHex(hexPass)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return key
+}
+
+//DEPRECIATED: Please use DeriveKeyFromString
+func ExtractKeyFromPassphraseString(pass string) *ECKey {
+	return DeriveKeyFromString(pass)
 }
