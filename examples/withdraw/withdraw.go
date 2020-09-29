@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	blockio "github.com/BlockIo/block_io-go"
 	"github.com/go-resty/resty/v2"
 	"github.com/joho/godotenv"
@@ -10,43 +9,46 @@ import (
 )
 
 func main() {
+	// load vars from .env file if it's there
 	godotenv.Load(".env")
 
+	// load environment vars
 	apiKey := os.Getenv("API_KEY")
 	pin := os.Getenv("PIN")
+	destinationAddress := os.Getenv("TO_ADDRESS")
 
+	// instantiate a REST client
 	restClient := resty.New()
-	rawWithdrawResponse, err := restClient.R().
+
+	// post the withdraw request to the REST API
+	withdrawRequest, withdrawErr := restClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
-		"to_address":os.Getenv("TO_ADDRESS"),
-		"amount": "0.001",
+		"to_address": destinationAddress,
+		"amount": "0.01",
 	}).Post("https://block.io/api/v2/withdraw?api_key=" + apiKey)
 
-	if err != nil {
-		log.Fatal(err)
+	if withdrawErr != nil {
+		log.Fatal(withdrawErr)
 	}
 
-	fmt.Println("Raw withdraw response: ")
-	fmt.Println(rawWithdrawResponse)
+	// sign the request
+	signatureReq, signErr := blockio.SignWithdrawRequestJson(pin, withdrawRequest.String())
 
-	withdrawData, withdrawDataErr := blockio.ParseSignatureResponse(rawWithdrawResponse.String())
-
-	if withdrawDataErr != nil {
-		log.Fatal(withdrawDataErr)
+	if signErr != nil {
+		log.Fatal(signErr)
 	}
 
-	signatureReq, signWithdrawReqErr := blockio.SignWithdrawRequest(pin, withdrawData)
-
-	if signWithdrawReqErr != nil {
-		log.Fatal(signWithdrawReqErr)
-	}
-
-	signAndFinalizeRes, err := restClient.R().
+	// post the resulting signed request to the REST API to broadcast the transaction
+	result, postErr := restClient.R().
 		SetHeader("Accept", "application/json").
 		SetBody(map[string]interface{}{
 		"signature_data": signatureReq,
 	}).Post("https://block.io/api/v2/sign_and_finalize_withdrawal?api_key=" + apiKey)
 
-	fmt.Println(signAndFinalizeRes)
+	if postErr != nil {
+		log.Fatal(postErr)
+	}
+
+	log.Println(result)
 }

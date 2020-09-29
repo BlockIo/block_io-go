@@ -1,0 +1,39 @@
+{
+  "status" : "success",
+  "data" : {
+    "reference_id" : "ba7fa634be47857a753342094f4b772730fa755e813241cbd70275229b2116ce",
+    "more_signatures_needed" : true,
+    "inputs" : [
+      {
+        "input_no" : 0,
+        "signatures_needed" : 1,
+        "data_to_sign" : "043f3f3cd5f2962d9cfdd1238f5a01848e16233f730f6d07d4f1a57c86b74f24",
+        "signers" : [
+          {
+            "signer_address" : "mwyvq8iiicTYXYDTrdAEPBZsLcnR9ddGtq",
+            "signer_public_key" : "0320f34ba25aeb77cdc0758fca22d32c89d4dcc534962d3bc5cbd7be4a8ea0acf9",
+            "signed_data" : null
+          }
+        ]
+      },
+      {
+        "input_no" : 1,
+        "signatures_needed" : 1,
+        "data_to_sign" : "4170a6e79579f04bab93418868e92619aeafc8fb3147ad77a285f48869bf21ae",
+        "signers" : [
+          {
+            "signer_address" : "mwyvq8iiicTYXYDTrdAEPBZsLcnR9ddGtq",
+            "signer_public_key" : "0320f34ba25aeb77cdc0758fca22d32c89d4dcc534962d3bc5cbd7be4a8ea0acf9",
+            "signed_data" : null
+          }
+        ]
+      }
+    ],
+    "encrypted_passphrase" : {
+      "signer_address" : "mwyvq8iiicTYXYDTrdAEPBZsLcnR9ddGtq",
+      "signer_public_key" : "0320f34ba25aeb77cdc0758fca22d32c89d4dcc534962d3bc5cbd7be4a8ea0acf9",
+      "passphrase" : "th27scjPv1sEQGiS4pKLTzkqqmAxW5lqWVXDMXOHN5utP6+fOTUeQ1JF7tlqF7/4Acxh0rtl5E1X5S95xi3v//tPCoQgkZai6FRC9XM6pZe50F4o9bx7hprpjaYUrh7Iu4U4aPcZjfno+vOmTt9Tu+91A/kj2VEVb9yTdGWhS8SC1WHIMim6Bzoqg3T5THER"
+    },
+    "unsigned_tx_hex" : "010000000287b309c5e90bb9d56fd120abad20c7c088fb163a58e4e44b5f186afba586ae450000000000ffffffff9ebd0032fb228904c9070247e2f21b232231f3a452bb9952692b15b0119e6dd90100000000ffffffff0240420f000000000017a91493cc0b0faac8832ec0bab5f671c2ec8e60fab47d87469f692f0000000017a914aac80d0832685987053950d1b1ed55b6e4a7aae78700000000"
+  }
+}

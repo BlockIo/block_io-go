@@ -6,24 +6,60 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"golang.org/x/crypto/pbkdf2"
+	"errors"
 )
 
-func ParseResponse(res string) (BaseResponse, error){
+func ParseResponse(res string) (*BaseResponse, error){
 	var resStruct BaseResponse
 	marshalErr := json.Unmarshal([]byte(res), &resStruct)
+
 	if marshalErr != nil {
-		return BaseResponse{}, marshalErr
+		return nil, marshalErr
 	}
-	return resStruct, nil
+
+	return &resStruct, nil
 }
 
-func ParseSignatureResponse(res string) (SignatureData, error){
+func ParseSignatureResponse(res string) (*SignatureData, error){
+  resErr := ValidateResponseJson(res)
+	if (resErr != nil) {
+		return nil, resErr
+	}
+
 	var withdrawRes SignatureRes
 	marshalErr := json.Unmarshal([]byte(res), &withdrawRes)
 	if marshalErr != nil {
-		return SignatureData{}, marshalErr
+		return nil, marshalErr
 	}
-	return withdrawRes.Data, nil
+
+	return &withdrawRes.Data, nil
+}
+
+func ParseErrorResponse(res string) (*ErrorResponse, error){
+	var resStruct ErrorResponse
+	marshalErr := json.Unmarshal([]byte(res), &resStruct)
+	if marshalErr != nil {
+		return nil, marshalErr
+	}
+	return &resStruct, nil
+}
+
+func ValidateResponseJson(responseJson string) error {
+	res, baseErr := ParseResponse(responseJson)
+
+	if (baseErr != nil) {
+		return baseErr
+	}
+
+	if (res.Status != "success") {
+		errRes, errErr := ParseErrorResponse(responseJson)
+		if (errErr != nil) {
+			return errors.New("Cannot parse response from block.io API")
+		}
+		return errors.New("API ERROR: " + errRes.Data.ErrorMessage)
+	}
+
+	return nil
 }
 
 func ExtractKeyFromEncryptedPassphrase(encryptedData string, b64Key string) (*ECKey, error) {
@@ -42,14 +78,7 @@ func ExtractKeyFromEncryptedPassphrase(encryptedData string, b64Key string) (*EC
 		return nil, decryptErr
 	}
 
-	seed, hexSeedErr := hex.DecodeString(string(clearText))
-	if hexSeedErr != nil {
-		return nil, hexSeedErr
-	}
-
-	privKey := sha256.Sum256(seed)
-	ecKey := NewECKey(privKey, true)
-	return ecKey, nil
+	return DeriveKeyFromHex(string(clearText))
 }
 
 func PinToAesKey(pin string) string {
