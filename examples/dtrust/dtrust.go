@@ -32,9 +32,9 @@ func main(){
 	// create the private key objects for each private key
 	// NOTE: in production environments you'll do this elsewhere
 	privKeys := []*blockio.ECKey{
-		blockio.ExtractKeyFromPassphraseString("verysecretkey1"),
-		blockio.ExtractKeyFromPassphraseString("verysecretkey2"),
-		blockio.ExtractKeyFromPassphraseString("verysecretkey3"),
+		blockio.DeriveKeyFromString("verysecretkey1"),
+		blockio.DeriveKeyFromString("verysecretkey2"),
+		blockio.DeriveKeyFromString("verysecretkey3"),
 	}
 
 	// populate our pubkeys array from the keys we just generated

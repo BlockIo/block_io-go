@@ -226,8 +226,8 @@ func TestSignRequestJsonWithKeys(t *testing.T){
 	//////// SETUP ////////
 	// Extract ECKeys from passphrase
 	keys := []*ECKey{
-		ExtractKeyFromPassphraseString("verysecretkey2"),
-		ExtractKeyFromPassphraseString("verysecretkey3"),
+		DeriveKeyFromString("verysecretkey2"),
+		DeriveKeyFromString("verysecretkey3"),
 	}
 
 	// read JSON input

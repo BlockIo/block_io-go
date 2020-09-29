@@ -36,7 +36,7 @@ func Setup() {
 	privKeyFromWif = ecKeyFromWif.PrivateKeyHex()
 	pubKeyFromWif = ecKeyFromWif.PublicKeyHex()
 
-	ecKeyFromPassphrase := ExtractKeyFromPassphrase(passphrase)
+	ecKeyFromPassphrase, _ := DeriveKeyFromHex(passphrase)
 	privKeyFromPassphrase = ecKeyFromPassphrase.PrivateKeyHex()
 	pubKeyFromPassphrase = ecKeyFromPassphrase.PublicKeyHex()
 
